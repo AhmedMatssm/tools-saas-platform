@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Search, ChevronLeft, ChevronRight, Loader2, Monitor, MapPin, AlignLeft, Calendar, User, Eye, Download, X } from "lucide-react"
+import { Search, ChevronLeft, ChevronRight, Loader2, Monitor, MapPin, AlignLeft, Calendar, User, Eye, Download, X, Heart } from "lucide-react"
 import axios from "axios"
 import { AnimatePresence, motion } from "framer-motion"
 
@@ -16,6 +16,23 @@ export default function GenerationsExplorer() {
   const [total, setTotal] = useState(0)
 
   const [selectedGen, setSelectedGen] = useState<any>(null)
+  const [togglingId, setTogglingId] = useState<string | null>(null)
+
+  const toggleLove = async (e: React.MouseEvent, id: string, currentState: boolean) => {
+    e.stopPropagation()
+    setTogglingId(id)
+    try {
+      const resp = await axios.post("/api/admin/toggle-love", { generationId: id, isLoved: !currentState })
+      if (resp.data.success) {
+        setGens(prev => prev.map(g => g.id === id ? { ...g, isLoved: resp.data.isLoved } : g))
+        if (selectedGen?.id === id) setSelectedGen({ ...selectedGen, isLoved: resp.data.isLoved })
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setTogglingId(null)
+    }
+  }
 
   useEffect(() => {
     const fetch = async () => {
@@ -102,8 +119,25 @@ export default function GenerationsExplorer() {
                className="group relative bg-card/40 backdrop-blur-md rounded-3xl overflow-hidden border border-white/5 shadow-xl hover:border-primary/30 transition-all cursor-pointer flex flex-col h-full"
                onClick={() => setSelectedGen(gen)}
             >
-               <div className="w-full h-48 overflow-hidden bg-black flex-shrink-0">
+               <div className="w-full h-48 overflow-hidden bg-black flex-shrink-0 relative">
                  <img src={gen.imageUrl} alt={gen.prompt} className="w-full h-full object-cover opacity-80 group-hover:scale-105 group-hover:opacity-100 transition-all duration-500" />
+                 <div className={`absolute top-4 right-4 z-10 transition-all duration-300 ${gen.isLoved ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
+                   <button 
+                     onClick={(e) => toggleLove(e, gen.id, !!gen.isLoved)}
+                     disabled={togglingId === gen.id}
+                     className={`p-2.5 rounded-full backdrop-blur-xl border transition-all active:scale-95 ${
+                       gen.isLoved 
+                         ? "bg-red-500/20 border-red-500/40 text-red-500" 
+                         : "bg-black/40 border-white/10 text-white/50 hover:text-white"
+                     }`}
+                   >
+                     {togglingId === gen.id ? (
+                       <Loader2 className="w-4 h-4 animate-spin" />
+                     ) : (
+                       <Heart className={`w-4 h-4 ${gen.isLoved ? "fill-current" : ""}`} />
+                     )}
+                   </button>
+                 </div>
                </div>
                
                <div className="p-5 flex-1 flex flex-col justify-between">

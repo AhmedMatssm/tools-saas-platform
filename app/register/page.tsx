@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Sparkles, ArrowRight, User, Mail, Lock } from "lucide-react"
@@ -10,11 +10,12 @@ import { motion } from "framer-motion"
 import { useRouter, useSearchParams } from "next/navigation"
 import { signIn } from "next-auth/react"
 import axios from "axios"
+import Cookies from "js-cookie"
 
 export default function RegisterPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const referrerId = searchParams.get("ref")
+  const [referrerId, setReferrerId] = useState<string | null>(null)
   
   const [formData, setFormData] = useState({
     name: "",
@@ -23,6 +24,19 @@ export default function RegisterPage() {
   })
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+
+  // ── REFERRAL TRACKING ──────────────────────────────────
+  // Store referral in a cookie so it persists social sign-ins
+  useEffect(() => {
+    const urlRef = searchParams.get("ref")
+    if (urlRef) {
+       Cookies.set("astral_ref_id", urlRef, { expires: 1 }) // 1 day
+       setReferrerId(urlRef)
+    } else {
+       const cookieRef = Cookies.get("astral_ref_id")
+       if (cookieRef) setReferrerId(cookieRef)
+    }
+  }, [searchParams])
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()

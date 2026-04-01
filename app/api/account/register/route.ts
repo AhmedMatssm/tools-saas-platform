@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 import { z } from "zod"
+import { logCreditChange } from "@/lib/credits"
 
 const registerSchema = z.object({
   name: z.string().min(2),
@@ -39,6 +40,9 @@ export async function POST(req: NextRequest) {
         }
       })
 
+      // NEW: Log initial credits for new user
+      await logCreditChange(tx, newUser.id, 10, "REFILL", "Welcome Bonus - Initial Aura Manifested")
+
       // 2. If valid referrerId, reward the friend (+5 credits)
       if (referrerId) {
         try {
@@ -49,6 +53,8 @@ export async function POST(req: NextRequest) {
               where: { id: referrerId },
               data: { credits: { increment: 5 } }
             })
+            // NEW: Log referral reward for referrer
+            await logCreditChange(tx, referrerId, 5, "REWARD", `Referral Reward - Seeker ${name} joined`)
           } else {
             console.warn(`[REFERRAL_REWARD] Referrer with ID ${referrerId} not found.`)
           }

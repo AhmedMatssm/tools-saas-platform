@@ -14,10 +14,21 @@ declare module "next-auth" {
       role: string
     } & DefaultSession["user"]
   }
+
+  interface User {
+    role?: string
+  }
+}
+
+declare module "next-auth/jwt" {
+  interface JWT {
+    id: string
+    role: string
+  }
 }
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma) as any,
+  adapter: PrismaAdapter(prisma),
   providers: [
     GithubProvider({
       clientId: process.env.GITHUB_ID!,
@@ -42,7 +53,7 @@ export const authOptions: NextAuthOptions = {
           throw new Error("MANIFESTATION_DENIED: Missing spectral fields.")
         }
 
-        const user = await (prisma as any).user.findUnique({
+        const user = await prisma.user.findUnique({
           where: { email: credentials.email }
         })
 
@@ -64,14 +75,14 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   callbacks: {
-    async jwt({ token, user }: any) {
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id
         token.role = user.role || "USER"
       }
       return token
     },
-    async session({ session, token }: any) {
+    async session({ session, token }) {
       if (session.user && token.id) {
         session.user.id = token.id
         session.user.role = token.role
@@ -80,14 +91,14 @@ export const authOptions: NextAuthOptions = {
         // JWT strategy caches data in the token, so profile
         // updates wouldn't reflect without this DB lookup.
         try {
-          const freshUser = await (prisma as any).user.findUnique({
+          const freshUser = await prisma.user.findUnique({
             where: { id: token.id },
             select: { name: true, email: true, role: true }
           })
           if (freshUser) {
-            session.user.name  = freshUser.name
+            session.user.name = freshUser.name
             session.user.email = freshUser.email
-            session.user.role  = freshUser.role
+            session.user.role = freshUser.role
           }
         } catch (_) {
           // Fall back to token values if DB is unreachable
@@ -99,6 +110,53 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: "/login",
   },
+  events: {
+    async signIn({ user }) {
+      // ── Session Manifestation Logging ───────────────
+      try {
+        const { headers } = await import("next/headers")
+        const headerList = headers()
+        const userAgent = (await headerList).get("user-agent") || ""
+        const ip = (await headerList).get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1"
+        const device = userAgent.toLowerCase().includes("mobile") ? "Mobile" : "Desktop"
+
+        if (user?.id) {
+          await prisma.loginHistory.create({
+            data: {
+              userId: user.id,
+              ip,
+              device
+            }
+          })
+          console.log(`[LOGIN_EVENT] Spectral session recorded for ${user.email} (${device})`)
+        }
+      } catch (err) {
+        console.error("[LOGIN_EVENT_ERROR]:", err)
+      }
+    },
+    async createUser({ user }: { user: any }) {
+      // ── Social Signup Referral Processing ───────────────
+      // Catch referrals for Google/Github seekers
+      try {
+        const { cookies } = await import("next/headers")
+        const cookieStore = cookies()
+        const referrerId = (await cookieStore).get("astral_ref_id")?.value
+
+        if (referrerId && user.id) {
+          console.log(`[SOCIAL_REFERRAL] New seeker ${user.email} joined via ${referrerId}`)
+
+          await prisma.user.update({
+            where: { id: referrerId },
+            data: { credits: { increment: 5 } }
+          })
+
+          console.log(`[SOCIAL_REFERRAL] Successfully awarded +5 Aura to referrer: ${referrerId}`)
+        }
+      } catch (err) {
+        console.error("[SOCIAL_REFERRAL_ERROR]:", err)
+      }
+    }
+  }
 }
 
 import { getServerSession } from "next-auth/next"

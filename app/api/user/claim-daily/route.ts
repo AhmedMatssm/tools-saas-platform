@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 import { getServerAuthSession } from "@/lib/auth"
+import { logCreditChange } from "@/lib/credits"
 
 const DAILY_REWARD = 1
 const CLAIM_INTERVAL_HOURS = 24
@@ -46,6 +47,9 @@ export async function POST() {
       },
       select: { credits: true }
     })
+
+    // NEW: Log daily reward
+    await logCreditChange(null, user.id, DAILY_REWARD, "REWARD", "Daily resonance bonus claimed")
 
     console.log(`[DAILY_REWARD] User ${user.id} claimed +${DAILY_REWARD} credit. New balance: ${updated.credits}`)
 

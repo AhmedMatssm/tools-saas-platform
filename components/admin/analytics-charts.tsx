@@ -9,6 +9,7 @@ export function AnalyticsCharts() {
   const [days, setDays] = useState(7)
   const [data, setData] = useState<{ gens: any, users: any, traffic: any }>({ gens: {}, users: null, traffic: null })
   const [loading, setLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -40,13 +41,16 @@ export function AnalyticsCharts() {
   )
 
   const { gens, users, traffic } = data
+  const itemsPerPage = 10
+  const totalPages = Math.ceil((users.topUsers?.length || 0) / itemsPerPage)
+  const paginatedUsers = users.topUsers?.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage) || []
 
   return (
     <div className="space-y-8 my-8">
       {/* Time Filter */}
       <div className="flex justify-end gap-2">
         {[7, 30, 90].map(d => (
-          <button key={d} onClick={() => setDays(d)} className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${days === d ? "bg-primary text-white" : "bg-white/5 text-muted-foreground hover:text-white"}`}>
+          <button key={d} onClick={() => { setDays(d); setCurrentPage(1); }} className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${days === d ? "bg-primary text-white" : "bg-white/5 text-muted-foreground hover:text-white"}`}>
             {d} Days
           </button>
         ))}
@@ -118,7 +122,29 @@ export function AnalyticsCharts() {
 
       {/* Top Users Tracking */}
       <div className="p-6 rounded-[2rem] border border-white/5 bg-card/40 backdrop-blur-xl">
-        <h2 className="text-sm font-black uppercase tracking-widest text-muted-foreground mb-6 flex items-center gap-2"><Users className="w-4 h-4 text-primary" /> User Behavior Analytics (Top Activity)</h2>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 text-muted-foreground">
+           <h2 className="text-sm font-black uppercase tracking-widest flex items-center gap-2"><Users className="w-4 h-4 text-primary" /> User Behavior Analytics (Top Activity)</h2>
+           <div className="flex items-center gap-4 shrink-0">
+              <span className="text-[9px] font-black uppercase tracking-[0.2em] opacity-40">Page {currentPage} of {totalPages || 1}</span>
+              <div className="flex gap-1.5">
+                 <button 
+                   onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                   disabled={currentPage === 1}
+                   className="p-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 disabled:opacity-20 disabled:cursor-not-allowed transition-all"
+                 >
+                    <TrendingUp className="w-3.5 h-3.5 rotate-[-90deg]" />
+                 </button>
+                 <button 
+                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                   disabled={currentPage >= totalPages}
+                   className="p-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 disabled:opacity-20 disabled:cursor-not-allowed transition-all"
+                 >
+                    <TrendingUp className="w-3.5 h-3.5 rotate-[90deg]" />
+                 </button>
+              </div>
+           </div>
+        </div>
+        
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
@@ -130,7 +156,7 @@ export function AnalyticsCharts() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5 text-sm">
-              {users.topUsers.map((u: any) => (
+              {paginatedUsers.map((u: any) => (
                 <tr key={u.id} className="hover:bg-white/5 transition-colors">
                   <td className="py-4 flex flex-col"><span className="font-bold">{u.name}</span><span className="text-[10px] text-muted-foreground font-mono">{u.email}</span></td>
                   <td className="py-4"><span className={`px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${u.plan === "PRO" ? "bg-amber-500/20 text-amber-400" : "bg-white/10 text-muted-foreground"}`}>{u.plan}</span></td>

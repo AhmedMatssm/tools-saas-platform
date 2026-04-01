@@ -62,7 +62,7 @@ export default function ToolsPage() {
           {categories.map(cat => (
             <Button
               key={cat}
-              variant={activeCategory === cat ? "primary" : "ghost"}
+              variant={activeCategory === cat ? "default" : "ghost"}
               onClick={() => setActiveCategory(cat)}
               className="px-6 rounded-xl capitalize shadow-sm text-xs font-semibold whitespace-nowrap"
             >

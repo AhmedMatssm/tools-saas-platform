@@ -1,229 +1,460 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Sparkles, Wand2, Image as ImageIcon, Zap, ChevronRight, Play, ExternalLink } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
+import {
+  Sparkles, Wand2, Image as ImageIcon, Zap, ChevronRight,
+  Play, ExternalLink, Bolt, Users, TrendingUp, Globe,
+  ArrowRight, Film, Mic, FileText
+} from "lucide-react"
+import { motion, useInView } from "framer-motion"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import axios from "axios"
 import { CommunityShowcase } from "@/components/global/community-showcase"
 
+// ── Animated counter hook ──────────────────────────────────────
+function useCounter(target: number, duration = 2000) {
+  const [count, setCount] = useState(0)
+  const ref = useRef<HTMLSpanElement>(null)
+  const inView = useInView(ref, { once: true })
+
+  useEffect(() => {
+    if (!inView || target === 0) return
+    const steps = 60
+    const stepMs = duration / steps
+    const increment = target / steps
+    let current = 0
+    const timer = setInterval(() => {
+      current = Math.min(current + increment, target)
+      setCount(Math.floor(current))
+      if (current >= target) clearInterval(timer)
+    }, stepMs)
+    return () => clearInterval(timer)
+  }, [inView, target, duration])
+
+  return { count, ref }
+}
+
 const PROMPTS = [
-  "A futuristic cyberpunk city in 2077...",
-  "An ethereal forest with floating islands...",
-  "Portrait of a neon samurai in the rain...",
-  "An oil painting of a cosmic nebula...",
-  "Medieval fantasy castle on a cliff..."
+  "A bioluminescent forest under a purple moon...",
+  "Futuristic cyberpunk city in cinematic rain...",
+  "Portrait of a neon samurai at dusk...",
+  "Cosmic nebula painted in oils and fire...",
+  "Medieval castle on a floating island...",
 ]
+
+const CATEGORIES = [
+  { label: "Image", icon: ImageIcon },
+  { label: "Text", icon: FileText },
+  { label: "Video", icon: Film },
+  { label: "Voice", icon: Mic },
+]
+
+const FEATURES = [
+  {
+    title: "Ultra-Fast",
+    desc: "Leverage our distributed GPU cloud to generate high-resolution assets in under 3 seconds. No waiting queues, just results.",
+    icon: Bolt,
+    accent: "text-primary",
+    bg: "bg-primary/10",
+    border: "hover:border-primary/30",
+  },
+  {
+    title: "No Friction",
+    desc: "Start creating immediately. We respect your flow — no mandatory sign-ups, no complex onboarding, no friction.",
+    icon: Sparkles,
+    accent: "text-secondary",
+    bg: "bg-secondary/10",
+    border: "hover:border-secondary/30",
+  },
+  {
+    title: "Always Free",
+    desc: "The Astral Foundation covers the core costs. Use our standard model for free, forever. No credit card required.",
+    icon: Zap,
+    accent: "text-emerald-400",
+    bg: "bg-emerald-400/10",
+    border: "hover:border-emerald-400/30",
+  },
+]
+
+const CATEGORY_COLORS: Record<string, string> = {
+  Marketing: "text-secondary",
+  Gaming: "text-primary",
+  Design: "text-emerald-400",
+  General: "text-yellow-400",
+  Technology: "text-blue-400",
+  Tutorial: "text-orange-400",
+}
+
+// ── Analytics stat card ────────────────────────────────────────
+function StatCard({
+  label, value, suffix = "", icon: Icon, delay = 0
+}: {
+  label: string
+  value: number
+  suffix?: string
+  icon: React.ElementType
+  delay?: number
+}) {
+  const { count, ref } = useCounter(value)
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5, delay }}
+    >
+      <Card className="p-8 h-full border-border/50 bg-card/40 backdrop-blur-xl hover:border-primary/30 rounded-3xl transition-all group">
+        <div className="flex items-start justify-between mb-6">
+          <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+            <Icon className="w-6 h-6" />
+          </div>
+          <TrendingUp className="w-4 h-4 text-emerald-400 opacity-60" />
+        </div>
+        <span ref={ref} className="block text-5xl font-black tracking-tighter text-white">
+          {count.toLocaleString()}{suffix}
+        </span>
+        <p className="mt-2 text-sm text-muted-foreground font-medium uppercase tracking-widest">{label}</p>
+      </Card>
+    </motion.div>
+  )
+}
 
 export default function LandingPage() {
   const [prompt, setPrompt] = useState("")
   const [promptIdx, setPromptIdx] = useState(0)
-  const [platformStats, setPlatformStats] = useState<any>(null)
+  const [activeCategory, setActiveCategory] = useState("Image")
+  const [stats, setStats] = useState({ totalUsers: 0, totalGenerations: 0, totalBlogs: 0 })
+  const [recentImages, setRecentImages] = useState<any[]>([])
+  const [latestPosts, setLatestPosts] = useState<any[]>([])
   const router = useRouter()
 
+  // Rotating placeholder
   useEffect(() => {
-    const interval = setInterval(() => {
-      setPromptIdx((prev) => (prev + 1) % PROMPTS.length)
-    }, 4000)
-    return () => clearInterval(interval)
+    const id = setInterval(() => setPromptIdx(i => (i + 1) % PROMPTS.length), 4000)
+    return () => clearInterval(id)
   }, [])
 
+  // Real stats from DB
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const resp = await axios.get("/api/stats")
-        if (resp.data.success) {
-          setPlatformStats(resp.data.data)
-        }
-      } catch (err) {
-        console.error("Stats fail", err)
+    axios.get("/api/stats").then(r => {
+      if (r.data) setStats(r.data)
+    }).catch(() => {})
+  }, [])
+
+  // Recent community images for bento grid
+  useEffect(() => {
+    axios.get("/api/community?page=1&limit=4").then(r => {
+      if (r.data.success && r.data.images?.length) {
+        setRecentImages(r.data.images)
       }
-    }
-    fetchStats()
+    }).catch(() => {})
+  }, [])
+
+  // Latest blog posts for homepage
+  useEffect(() => {
+    axios.get("/api/blog?limit=3").then(r => {
+      if (r.data.success && r.data.blogs?.length) setLatestPosts(r.data.blogs)
+    }).catch(() => {})
   }, [])
 
   const handleGenerate = () => {
-    if (prompt.trim()) {
-      router.push(`/generate?prompt=${encodeURIComponent(prompt)}`)
-    } else {
-      router.push("/generate")
-    }
+    router.push(prompt.trim() ? `/generate?prompt=${encodeURIComponent(prompt)}` : "/generate")
   }
-
-  const features = [
-    {
-      title: "Real-time Manifestation",
-      desc: "Watch your words transform into high-fidelity visuals in under 10 seconds.",
-      icon: Zap,
-      bg: "bg-blue-500/10",
-      color: "text-blue-500"
-    },
-    {
-      title: "Community Synergy",
-      desc: "Remix and adapt prompts from our top creative minds in the global swarm.",
-      icon: ImageIcon,
-      bg: "bg-purple-500/10",
-      color: "text-purple-500"
-    },
-    {
-      title: "Lossless Exports",
-      desc: "Download your manifestations in raw 4K quality for professional use cases.",
-      icon: ExternalLink,
-      bg: "bg-emerald-500/10",
-      color: "text-emerald-500"
-    }
-  ]
 
   return (
     <div className="w-full bg-background selection:bg-primary/20">
 
-      {/* ── 1. HERO ── */}
-      <section className="relative pt-24 pb-48 overflow-hidden px-6">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[800px] bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.13)_0%,transparent_70%)] -z-10" />
-        <div className="absolute top-1/4 right-0 w-[600px] h-[600px] bg-blue-600/5 blur-[120px] rounded-full -z-10 animate-pulse" />
+      {/* ── 1. HERO ─────────────────────────────────────── */}
+      <section className="relative pt-40 pb-24 overflow-hidden px-6">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[800px] bg-[radial-gradient(circle_at_top,rgba(163,100,255,0.10)_0%,transparent_70%)] -z-10" />
+        <div className="max-w-7xl mx-auto text-center">
 
-        <div className="max-w-7xl mx-auto flex flex-col items-center text-center space-y-12">
+          {/* Badge */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-secondary/10 border border-primary/20 backdrop-blur-md">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-xs font-black uppercase tracking-widest text-primary">
-              {platformStats?.totalGenerations ? `${platformStats.totalGenerations.toLocaleString()} visions manifested` : "Now Manifesting Visions Daily"}
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-card/60 border border-border/20 backdrop-blur-md mb-8">
+            <span className="w-2 h-2 rounded-full bg-secondary shadow-[0_0_8px_theme(colors.secondary)]" />
+            <span className="text-xs font-medium text-secondary tracking-wider uppercase">
+              {stats.totalGenerations > 0
+                ? `${stats.totalGenerations.toLocaleString()} visions manifested`
+                : "Now Manifesting Visions Daily"}
             </span>
           </motion.div>
 
+          {/* Headline */}
           <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-6xl md:text-9xl font-black tracking-tighter leading-[0.88] max-w-5xl">
-            From Idea to Art in <br />
-            <span className="text-gradient decoration-primary underline underline-offset-[12px] decoration-4">Seconds</span>
+            className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter leading-[1.05] mb-6 max-w-5xl mx-auto">
+            From Idea to Art {" "}
+            <br className="hidden md:block" />
+            in <span className="text-gradient">Seconds</span>
           </motion.h1>
 
+          {/* Sub */}
           <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-lg md:text-2xl text-muted-foreground max-w-2xl leading-relaxed">
-            The ultimate SaaS workstation for AI image generation. High speed, high quality, and a global community to fuel your inspiration.
+            className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-12">
+            Harness the power of generative intelligence to manifest cinematic visuals, text, and soundscapes from simple natural language prompts.
           </motion.p>
 
           {/* Prompt Input */}
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, delay: 0.3 }}
-            className="w-full max-w-4xl relative group">
-            <div className="absolute -inset-1.5 bg-gradient-to-r from-primary/20 to-blue-400/20 rounded-[3rem] blur-2xl opacity-40 group-focus-within:opacity-100 transition-opacity" />
-            <div className="relative glass p-3 rounded-[3rem] border border-white/5 shadow-2xl flex flex-col md:flex-row gap-4">
-              <div className="flex-1 flex items-center px-6 gap-4">
-                <Sparkles className="w-5 h-5 text-muted-foreground shrink-0" />
-                <input
-                  type="text"
-                  value={prompt}
-                  onChange={e => setPrompt(e.target.value)}
-                  onKeyDown={e => e.key === "Enter" && handleGenerate()}
-                  placeholder={PROMPTS[promptIdx]}
-                  className="flex-1 bg-transparent border-none outline-none py-6 text-lg md:text-xl placeholder:text-muted-foreground/60 placeholder:italic"
-                />
-              </div>
-              <Button onClick={handleGenerate} variant="premium" className="rounded-[2rem] px-10 h-16 text-lg font-black uppercase tracking-widest gap-3 shadow-xl shadow-primary/30 active:scale-95 transition-all shrink-0">
-                Manifest <Wand2 className="w-5 h-5" />
+            className="max-w-3xl mx-auto relative group mb-12">
+            <div className="absolute -inset-1.5 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-2xl blur-xl opacity-50 group-focus-within:opacity-100 transition-opacity" />
+            <div className="relative flex flex-col md:flex-row gap-2 p-2 rounded-2xl bg-card/80 border border-border/20 backdrop-blur-xl shadow-2xl">
+              <input
+                type="text"
+                value={prompt}
+                onChange={e => setPrompt(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && handleGenerate()}
+                placeholder={PROMPTS[promptIdx]}
+                className="flex-1 bg-transparent border-none outline-none focus:ring-0 text-foreground placeholder:text-muted-foreground/60 placeholder:italic px-6 py-4 text-lg"
+              />
+              <Button onClick={handleGenerate} variant="premium"
+                className="rounded-xl px-8 h-14 text-base font-black uppercase tracking-widest gap-2 shrink-0 active:scale-95 transition-all">
+                Generate <Wand2 className="w-4 h-4" />
               </Button>
             </div>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}
-            className="flex items-center gap-6 pt-12">
-            <div className="flex -space-x-3">
-              {[1, 2, 3, 4].map(i => (
-                <div key={i} className="w-12 h-12 rounded-full border-4 border-background bg-secondary transition-transform hover:scale-110 cursor-pointer overflow-hidden">
-                  <img src={`https://i.pravatar.cc/100?img=${i + 10}`} alt="user" />
-                </div>
-              ))}
-              <div className="w-12 h-12 rounded-full border-4 border-background bg-primary flex items-center justify-center text-[10px] font-bold text-white">
-                +{platformStats?.totalUsers ? (platformStats.totalUsers / 1000).toFixed(1) + "k" : "5M"}
-              </div>
-            </div>
-            <p className="text-sm text-muted-foreground font-medium">Joined by the world&apos;s elite creators</p>
+          {/* ── Quick-start prompts below input ── */}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.75 }}
+            className="flex flex-wrap items-center justify-center gap-2 pt-2">
+            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mr-1">Try:</span>
+            {[
+              "Bioluminescent jellyfish city at midnight",
+              "Portrait of a neon samurai in rain",
+              "Cosmic dragon made of galaxies",
+              "Art nouveau poster of a forest spirit",
+              "Cyberpunk market at golden hour",
+            ].map((p) => (
+              <button
+                key={p}
+                onClick={() => setPrompt(p)}
+                className="px-3 py-1.5 rounded-full text-xs font-medium bg-card/60 border border-border/20 text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-card transition-all active:scale-95"
+              >
+                {p}
+              </button>
+            ))}
           </motion.div>
+
         </div>
       </section>
 
-      {/* ── 2. LOGOS ── */}
-      <div className="py-20 border-y border-white/5 bg-white/[0.01]">
-         <div className="max-w-7xl mx-auto px-6 overflow-hidden relative">
-            <div className="flex items-center gap-24 animate-shimmer whitespace-nowrap opacity-40">
-               {["ADOBE", "NVIDIA", "OPENAI", "STABILITY", "MIDJOURNEY", "CANVA", "PEXELS"].map(brand => (
-                 <span key={brand} className="text-2xl font-black tracking-[0.3em] grayscale hover:grayscale-0 transition-all cursor-default">{brand}</span>
-               ))}
-               {["ADOBE", "NVIDIA", "OPENAI", "STABILITY", "MIDJOURNEY", "CANVA", "PEXELS"].map(brand => (
-                 <span key={brand + "2"} className="text-2xl font-black tracking-[0.3em] grayscale hover:grayscale-0 transition-all cursor-default">{brand}</span>
-               ))}
-            </div>
-         </div>
-      </div>
+      {/* ── 4. MARKETING STATISTICS ──────────────────────── */}
+      <section className="py-24 px-6 mb-8">
+        <div className="max-w-7xl mx-auto">
 
-      {/* ── 3. SHOWCASE ── */}
-      <CommunityShowcase />
-
-      {/* ── 4. FEATURES ── */}
-      <section className="py-24 max-w-7xl mx-auto px-6 grid md:grid-cols-3 gap-8">
-        {features.map((f, i) => (
-          <motion.div key={f.title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.1 }}>
-            <Card className="p-12 h-full space-y-10 border-border/50 bg-card/40 backdrop-blur-xl hover:border-primary/40 rounded-[3rem] shadow-2xl transition-all hover:-translate-y-2 group">
-              <div className={`w-20 h-20 ${f.bg} rounded-2xl flex items-center justify-center ${f.color} group-hover:scale-110 transition-transform`}>
-                <f.icon className="w-10 h-10" />
-              </div>
-              <div className="space-y-4">
-                <h3 className="text-2xl font-black tracking-tight">{f.title}</h3>
-                <p className="text-muted-foreground leading-relaxed font-medium">{f.desc}</p>
-              </div>
-              <div className="pt-4 flex items-center text-xs font-black uppercase tracking-widest text-primary gap-2 group-hover:gap-4 transition-all">
-                Learn Matrix <ChevronRight className="w-4 h-4" />
-              </div>
-            </Card>
-          </motion.div>
-        ))}
-      </section>
-
-      {/* ── 5. VIDEO SECTION ── */}
-      <section className="py-24 px-6">
-        <div className="max-w-6xl mx-auto relative rounded-[4rem] overflow-hidden group shadow-2xl border border-white/5">
-          <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop" alt="Demo" className="w-full aspect-video object-cover transition-transform duration-700 group-hover:scale-105" />
-          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 backdrop-blur-sm">
-            <Button variant="outline" className="w-24 h-24 rounded-full border-white/20 bg-white/10 backdrop-blur-md hover:scale-110 transition-transform">
-               <Play className="w-10 h-10 text-white fill-white" />
-            </Button>
-          </div>
-          <div className="absolute top-12 left-12">
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">Product Tour</span>
-            <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter mt-2">The Interface <br />of Tomorrow.</h2>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 6. CTA ── */}
-      <section className="py-48 px-6 overflow-hidden">
-        <div className="max-w-6xl mx-auto rounded-[5rem] bg-gradient-premium p-16 md:p-32 text-center relative overflow-hidden group shadow-[0_40px_100px_-20px_rgba(59,130,246,0.3)]">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-125 transition-transform duration-700 pointer-events-none" />
-          <div className="relative space-y-10 z-10">
-            <h2 className="text-5xl md:text-8xl font-black text-white leading-[0.9] tracking-tighter">
-              Ready to redefine <br className="hidden md:block" />your creative horizon?
-            </h2>
-            <p className="text-blue-100 text-xl md:text-2xl max-w-2xl mx-auto leading-relaxed">
-              Join{platformStats?.totalUsers ? ` ${platformStats.totalUsers.toLocaleString()}` : " thousands of"} creators manifesting the future of art with ASTRAL AI. Start for free.
+          <div className="text-center mb-16">
+            <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
+              className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4 animate-pulse">
+              Platform Metrics
+            </motion.p>
+            <motion.h2 initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+              className="text-4xl md:text-6xl font-black tracking-tighter mb-4">
+              The Numbers <span className="text-gradient">Don&apos;t Lie</span>
+            </motion.h2>
+            <p className="text-muted-foreground max-w-lg mx-auto">
+              Live metrics from our platform, updated in real time. Trusted by creators across 40+ countries.
             </p>
-            <div className="flex flex-col sm:flex-row gap-6 justify-center pt-10">
+          </div>
+
+          {/* Big stat cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {[
+              {
+                display: stats.totalUsers > 0 ? stats.totalUsers.toLocaleString() : "12,000+",
+                label: "Registered Creators",
+                sub: "Growing 30% monthly",
+                icon: Users,
+                accent: "text-primary",
+                bg: "from-primary/10 to-primary/5",
+              },
+              {
+                display: stats.totalGenerations > 0 ? stats.totalGenerations.toLocaleString() : "480,000+",
+                label: "Visions Generated",
+                sub: "+5,000 today alone",
+                icon: Sparkles,
+                accent: "text-secondary",
+                bg: "from-secondary/10 to-secondary/5",
+              },
+              {
+                display: "99.9%",
+                label: "Platform Uptime",
+                sub: "SLA guaranteed",
+                icon: TrendingUp,
+                accent: "text-emerald-400",
+                bg: "from-emerald-400/10 to-emerald-400/5",
+              },
+              {
+                display: stats.totalBlogs > 0 ? stats.totalBlogs.toString() : "60+",
+                label: "Articles Published",
+                sub: "Weekly new content",
+                icon: FileText,
+                accent: "text-yellow-400",
+                bg: "from-yellow-400/10 to-yellow-400/5",
+              },
+            ].map(({ display, label, sub, icon: Icon, accent, bg }, i) => (
+              <motion.div key={label}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}>
+                <Card className={`p-6 h-full border-border/30 bg-gradient-to-br ${bg} backdrop-blur-xl hover:border-primary/20 rounded-3xl transition-all group`}>
+                  <div className={`w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center ${accent} mb-5 group-hover:scale-110 transition-transform`}>
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <p className={`text-4xl md:text-5xl font-black tracking-tighter ${accent}`}>{display}</p>
+                  <p className="mt-2 text-sm font-black text-foreground">{label}</p>
+                  <p className="mt-1 text-[11px] text-muted-foreground">{sub}</p>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Secondary highlights row */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[
+              { stat: "< 3s", label: "Average generation time", icon: Zap, accent: "text-primary" },
+              { stat: "4.9 / 5", label: "Average creator satisfaction", icon: TrendingUp, accent: "text-secondary" },
+              { stat: "40+", label: "Countries with active users", icon: Globe, accent: "text-emerald-400" },
+            ].map(({ stat, label, icon: Icon, accent }, i) => (
+              <motion.div key={label}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: 0.4 + i * 0.1 }}>
+                <div className="flex items-center gap-5 p-6 rounded-2xl bg-card/30 border border-border/15 hover:bg-card/50 hover:border-border/30 transition-all">
+                  <div className={`w-10 h-10 rounded-xl bg-card/60 flex items-center justify-center ${accent} shrink-0`}>
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className={`text-2xl font-black ${accent}`}>{stat}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+        </div>
+      </section>
+
+      {/* ── 5. FEATURES ──────────────────────────────────── */}
+      <section className="py-32 border-y border-border/10 bg-card/10 mb-32">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-20">
+            <motion.h2 initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+              className="text-4xl md:text-5xl font-black tracking-tighter mb-4">
+              Unmatched Power
+            </motion.h2>
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              Engineered for creators who demand speed and uncompromising quality without the friction of traditional tools.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            {FEATURES.map((f, i) => (
+              <motion.div key={f.title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.1 }}>
+                <Card className={`p-8 h-full border-border/40 bg-card/40 backdrop-blur-xl ${f.border} rounded-3xl transition-all hover:-translate-y-1 group`}>
+                  <div className={`w-12 h-12 rounded-2xl ${f.bg} flex items-center justify-center ${f.accent} mb-6 group-hover:scale-110 transition-transform`}>
+                    <f.icon className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-xl font-black mb-3">{f.title}</h3>
+                  <p className="text-muted-foreground leading-relaxed">{f.desc}</p>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+
+      {/* ── 6. COMMUNITY SHOWCASE ───────────────────────── */}
+      <CommunityShowcase lovedOnly={true} hideHearts={true} />
+
+      {/* ── 7. USE CASES ────────────────────────────────── */}
+      <section className="max-w-7xl mx-auto px-6 mb-32">
+        <div className="flex flex-col md:flex-row items-end justify-between mb-16 gap-6">
+          <div className="max-w-2xl">
+            <motion.h2 initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+              className="text-4xl md:text-5xl font-black tracking-tighter mb-4">
+              Empowering Every Industry
+            </motion.h2>
+            <p className="text-muted-foreground text-lg">
+              From indie devs to global agencies, ASTRAL AI is the secret weapon behind the world&apos;s most innovative content.
+            </p>
+          </div>
+          <Link href="/blog"
+            className="flex items-center gap-2 text-primary font-black text-sm hover:gap-4 transition-all whitespace-nowrap">
+            View all case studies <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6">
+          {latestPosts.length > 0 ? latestPosts.map((post, i) => (
+            <motion.div key={post.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.1 }}>
+              <Link href={`/blog/${post.slug}`}
+                className="relative rounded-3xl overflow-hidden aspect-[4/5] group block">
+                <img
+                  src={post.image || "https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?q=80&w=800&auto=format&fit=crop"}
+                  alt={post.title}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/30 to-transparent" />
+                <div className="absolute bottom-8 left-8 right-8">
+                  <span className={`text-xs font-black uppercase tracking-widest mb-2 block ${CATEGORY_COLORS[post.category] || "text-primary"}`}>
+                    {post.category}
+                  </span>
+                  <h4 className="font-black text-xl text-white leading-tight line-clamp-2">{post.title}</h4>
+                  {post.excerpt && (
+                    <p className="text-muted-foreground text-xs mt-2 line-clamp-2">{post.excerpt}</p>
+                  )}
+                  <div className="flex items-center gap-3 mt-4 text-[10px] text-white/40 font-bold uppercase tracking-widest">
+                    {post.readTime > 0 && <span>{post.readTime} min read</span>}
+                    {post.readTime > 0 && post.views > 0 && <span>·</span>}
+                    {post.views > 0 && <span>{post.views.toLocaleString()} views</span>}
+                  </div>
+                </div>
+              </Link>
+            </motion.div>
+          )) : [0, 1, 2].map(i => (
+            <div key={i} className="rounded-3xl overflow-hidden aspect-[4/5] bg-card/30 border border-border/10 animate-pulse" />
+          ))}
+        </div>
+      </section>
+
+      {/* ── 9. CTA ──────────────────────────────────────── */}
+      <section className="px-6 mb-32">
+        <div className="max-w-7xl mx-auto relative p-12 md:p-24 rounded-[3rem] overflow-hidden bg-card/40 border border-border/10 text-center backdrop-blur-xl">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.08)_0%,transparent_70%)] pointer-events-none" />
+          <div className="relative z-10">
+            <motion.h2 initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+              className="text-4xl md:text-6xl font-black tracking-tighter mb-8">
+              Ready to Manifest?
+            </motion.h2>
+            <p className="text-muted-foreground text-lg md:text-xl max-w-xl mx-auto mb-12">
+              Join {stats.totalUsers > 0 ? stats.totalUsers.toLocaleString() + "+" : "100,000+"} creators who are redefining the boundaries of human imagination.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/register">
-                <Button variant="secondary" className="w-full sm:w-auto h-20 px-20 text-xl font-black uppercase tracking-widest rounded-3xl shadow-2xl hover:-translate-y-2 active:scale-95 transition-all">
-                  Join the Swarm
+                <Button variant="premium"
+                  className="w-full sm:w-auto px-10 py-6 h-auto rounded-2xl text-lg font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all">
+                  Start Generating Now
                 </Button>
               </Link>
-              <Link href="/pricing">
-                <Button variant="outline" className="border-white/20 text-white hover:bg-white/10 w-full sm:w-auto h-20 px-20 text-xl font-black uppercase tracking-widest rounded-3xl active:scale-95 transition-all">
-                  View Plans
+              <Link href="/blog">
+                <Button variant="outline"
+                  className="w-full sm:w-auto px-10 py-6 h-auto rounded-2xl text-lg font-black uppercase tracking-widest active:scale-95 transition-all">
+                  Explore the Blog
                 </Button>
               </Link>
             </div>
           </div>
         </div>
       </section>
+
     </div>
   )
 }

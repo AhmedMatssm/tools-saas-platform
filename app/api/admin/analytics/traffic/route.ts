@@ -14,46 +14,60 @@ export async function GET(req: Request) {
     const startDate = new Date()
     startDate.setDate(startDate.getDate() - days)
 
-    // Pull unique IPs from recent generations as a basic proxy for active traffic
-    const activeVisitors = await (prisma as any).generation.findMany({
+    // ── 1. Fetch Real Visitor History ──────────────────
+    const visitors = await (prisma as any).visitor.findMany({
       where: { createdAt: { gte: startDate } },
-      select: { ip: true, createdAt: true },
+      select: { ipHash: true, userAgent: true, createdAt: true },
     })
 
-    // Grouping visitors by day (mocked analytics tracking system)
-    const dailyVisitsCounter = activeVisitors.reduce((acc: Record<string, Set<string>>, curr: any) => {
+    // ── 2. Group by Day ────────────────────────────────
+    const dailyVisits = visitors.reduce((acc: any, curr: any) => {
       const date = curr.createdAt.toISOString().split("T")[0]
-      if (!acc[date]) acc[date] = new Set()
-      if (curr.ip) acc[date].add(curr.ip)
+      if (!acc[date]) acc[date] = { unique: new Set(), desktop: 0, mobile: 0 }
+      
+      acc[date].unique.add(curr.ipHash)
+      const isMobile = curr.userAgent?.toLowerCase().includes("mobile")
+      if (isMobile) acc[date].mobile++
+      else acc[date].desktop++
+      
       return acc
     }, {})
 
+    // ── 3. Build Timeline ─────────────────────────────
     const trafficData = []
     let totalUnique = new Set()
+    let totalDesktop = 0
+    let totalMobile = 0
     
     for (let i = days - 1; i >= 0; i--) {
       const d = new Date()
       d.setDate(d.getDate() - i)
       const dateStr = d.toISOString().split("T")[0]
-      const uniqueVisits = dailyVisitsCounter[dateStr]?.size || Math.floor(Math.random() * 50) + 10 // Mock a baseline if no data
+      
+      const dayData = dailyVisits[dateStr]
+      const uniqueVisits = dayData?.unique.size || 0
       
       trafficData.push({
         name: d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
         date: dateStr,
         visitors: uniqueVisits,
-        pageViews: uniqueVisits * (Math.floor(Math.random() * 4) + 2) // Basic view multiplier
+        pageViews: uniqueVisits * 5 // Estimated engagement multiplier
       })
       
-      if (dailyVisitsCounter[dateStr]) {
-        dailyVisitsCounter[dateStr].forEach((ip: string) => totalUnique.add(ip))
+      if (dayData) {
+        dayData.unique.forEach((hash: string) => totalUnique.add(hash))
+        totalDesktop += dayData.desktop
+        totalMobile += dayData.mobile
       }
     }
 
+    // ── 4. Calculate Final Stats ──────────────────────
+    const totalHits = totalDesktop + totalMobile
     const stats = {
       totalVisitors: trafficData.reduce((acc, curr) => acc + curr.visitors, 0),
-      uniqueVisitors: totalUnique.size > 0 ? totalUnique.size : Math.floor(Math.random() * 200) + 50,
-      desktopPercentage: 68,
-      mobilePercentage: 32
+      uniqueVisitors: totalUnique.size,
+      desktopPercentage: totalHits > 0 ? Math.round((totalDesktop / totalHits) * 100) : 100,
+      mobilePercentage: totalHits > 0 ? Math.round((totalMobile / totalHits) * 100) : 0
     }
 
     return NextResponse.json({

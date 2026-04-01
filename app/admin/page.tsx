@@ -34,13 +34,14 @@ export default function AdminDashboard() {
   if (isLoading) return <div className="p-20 text-center font-black animate-pulse uppercase tracking-[0.5em] text-primary">Engaging Admin Aura...</div>
 
   const statCards = [
+    { label: "Total Visitors", value: stats?.totalVisitors || 0, icon: Monitor, color: "blue", trend: "Live" },
+    { label: "Today Hits", value: stats?.todayVisitors || 0, icon: Activity, color: "emerald", trend: "Today" },
     { label: "Total Users", value: stats?.totalUsers || 0, icon: Users, color: "blue", trend: "+12%" },
     { label: "Manifestations", value: stats?.totalGenerations || 0, icon: Zap, color: "purple", trend: "+24%" },
     { label: "Blog Posts", value: stats?.totalBlogs || 0, icon: FileText, color: "indigo", trend: "+0%" },
     { label: "Comments", value: stats?.totalComments || 0, icon: MessageCircle, color: "green", trend: "+45%" },
     { label: "Post Likes", value: stats?.totalLikes || 0, icon: ThumbsUp, color: "teal", trend: "+80%" },
     { label: "Saved Posts", value: stats?.totalSaved || 0, icon: Bookmark, color: "orange", trend: "+15%" },
-    { label: "Aura Health", value: "99.9%", icon: Activity, color: "green", trend: "Stable" }
   ]
 
   return (
@@ -59,6 +60,9 @@ export default function AdminDashboard() {
            </a>
            <a href="/admin/users">
              <Button variant="outline" className="rounded-xl px-6 h-12 gap-2 text-xs font-black uppercase tracking-widest">Users <Users className="w-4 h-4" /></Button>
+           </a>
+           <a href="/admin/loves">
+             <Button variant="outline" className="rounded-xl px-6 h-12 gap-2 text-xs font-black uppercase tracking-widest border-red-500/30 text-red-500 hover:bg-red-500/10">Loves <ThumbsUp className="w-4 h-4" /></Button>
            </a>
            <Button onClick={fetchStats} variant="outline" className="rounded-xl px-6 h-12 gap-2 text-xs font-black uppercase tracking-widest">Refresh <Activity className="w-4 h-4" /></Button>
         </div>

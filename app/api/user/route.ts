@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 import { getServerAuthSession } from "@/lib/auth"
+import { logCreditChange } from "@/lib/credits"
 
 /**
  * GET /api/user
@@ -46,6 +47,10 @@ export async function GET() {
           },
           select: { credits: true }
         })
+        
+        // NEW: Log auto refill
+        await logCreditChange(null, user.id, DAILY_REFILL, "REFILL", "Automatic daily 24h refill")
+
         user.credits = updated.credits
         console.log(`[AUTO_REFILL] User ${user.id} - credits refilled by ${DAILY_REFILL}. New: ${user.credits}`)
       }

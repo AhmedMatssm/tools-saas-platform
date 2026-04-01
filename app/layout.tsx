@@ -23,7 +23,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className="dark scroll-smooth">
-      <body className={cn(inter.className, "bg-background text-foreground min-h-screen flex flex-col antialiased")}>
+      <body 
+        suppressHydrationWarning={true}
+        className={cn(inter.className, "bg-background text-foreground min-h-screen flex flex-col antialiased")}
+      >
         <Providers>
           <Navbar />
           <main className="flex-1 pt-24 pb-12">

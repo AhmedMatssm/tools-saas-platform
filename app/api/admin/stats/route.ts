@@ -5,19 +5,26 @@ import { getServerAuthSession } from "@/lib/auth"
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerAuthSession()
-    
+
     // Check if session exists and role is ADMIN
     if (!session || (session.user as any)?.role !== "ADMIN") {
       return NextResponse.json({ error: "Access denied: Admin only." }, { status: 403 })
     }
 
-    const [userCount, genCount, blogCount, commentCount, likeCount, savedCount] = await Promise.all([
+    const now = new Date()
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+
+    const [userCount, genCount, blogCount, commentCount, likeCount, savedCount, visitorCount, todayCount] = await Promise.all([
       prisma.user.count(),
       (prisma as any).generation.count(),
       (prisma as any).blog.count(),
       (prisma as any).comment.count(),
       (prisma as any).postLike.count(),
-      (prisma as any).savedPost.count()
+      (prisma as any).savedPost.count(),
+      (prisma as any).visitor.count(),
+      (prisma as any).visitor.count({
+        where: { createdAt: { gte: todayStart } }
+      })
     ])
 
     const recentGenerations = await (prisma as any).generation.findMany({
@@ -33,7 +40,9 @@ export async function GET(req: NextRequest) {
         totalBlogs: blogCount,
         totalComments: commentCount,
         totalLikes: likeCount,
-        totalSaved: savedCount
+        totalSaved: savedCount,
+        totalVisitors: visitorCount,
+        todayVisitors: todayCount
       },
       recentGenerations
     })

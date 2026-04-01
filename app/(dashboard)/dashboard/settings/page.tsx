@@ -14,7 +14,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import axios from "axios"
 
 /* ─── Types ─────────────────────────────────────────────── */
-type Tab = "account" | "password" | "billing" | "security" | "history" | "notifications"
+type Tab = "account" | "password" | "billing" | "security" | "notifications"
 
 /* ─── Toast helper ───────────────────────────────────────── */
 function useToast() {
@@ -201,7 +201,6 @@ export default function SettingsPage() {
     { id: "password", label: "Password", icon: Lock },
     { id: "billing", label: "Billing & Credits", icon: CreditCard },
     { id: "security", label: "Security & API", icon: Shield },
-    { id: "history", label: "Activity Logs", icon: History },
     { id: "notifications", label: "Preferences", icon: Bell },
   ]
 
@@ -557,34 +556,6 @@ export default function SettingsPage() {
               </motion.div>
             )}
 
-            {/* ─ ACTIVITY LOGS ─ */}
-            {activeTab === "history" && (
-              <motion.div key="history" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} className="space-y-6">
-                <Section title="Recent Vision Activity" subtitle="Check out the historical ledger for your most recent image generations">
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {userConfig?.generations?.length > 0 ? userConfig.generations.map((gen: any) => (
-                         <div key={gen.id} className="flex flex-col rounded-2xl border border-white/5 bg-white/[0.02] overflow-hidden group">
-                           <div className="h-40 w-full overflow-hidden bg-black/50 border-b border-white/5">
-                              <img src={gen.imageUrl} alt={gen.prompt} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                           </div>
-                           <div className="p-4 space-y-2 flex-1 flex flex-col justify-between">
-                              <p className="text-sm font-black line-clamp-2 leading-relaxed tracking-tight" title={gen.prompt}>{gen.prompt}</p>
-                              <div className="flex justify-between items-center text-[9px] uppercase font-black text-muted-foreground tracking-widest">
-                                <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> {new Date(gen.createdAt).toLocaleDateString()}</span>
-                                <span className="text-primary font-mono opacity-60">ID:{gen.id.slice(-6)}</span>
-                              </div>
-                           </div>
-                         </div>
-                      )) : (
-                         <div className="md:col-span-2 text-center py-10 opacity-50 flex flex-col items-center">
-                            <History className="w-10 h-10 mb-4 text-muted-foreground" />
-                            <p className="text-sm font-black uppercase tracking-widest text-muted-foreground">No recent image generations logged.</p>
-                         </div>
-                      )}
-                   </div>
-                </Section>
-              </motion.div>
-            )}
 
             {/* ─ NOTIFICATIONS ─ */}
             {activeTab === "notifications" && (

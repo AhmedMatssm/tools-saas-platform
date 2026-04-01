@@ -1,23 +1,28 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import axios from "axios"
 import { Button } from "@/components/ui/button"
-import { Copy, Loader2, Sparkles, Plus, Camera } from "lucide-react"
+import { Copy, Loader2, Sparkles, Plus, Camera, Heart } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
 
-export function CommunityShowcase() {
+export function CommunityShowcase({ lovedOnly = false, hideHearts = false }: { lovedOnly?: boolean, hideHearts?: boolean }) {
+  const { data: session } = useSession()
+  const isAdmin = (session?.user as any)?.role === "ADMIN"
   const [images, setImages] = useState<any[]>([])
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
   const [loading, setLoading] = useState(true)
+  const [togglingId, setTogglingId] = useState<string | null>(null)
   const router = useRouter()
 
   const fetchImages = async (pageNum: number) => {
     setLoading(true)
     try {
-      const resp = await axios.get(`/api/community?page=${pageNum}&limit=12`)
+      const resp = await axios.get(`/api/community?page=${pageNum}&limit=12${lovedOnly ? "&lovedOnly=true" : ""}`)
+      
       if (resp.data.success) {
         if (pageNum === 1) {
           setImages(resp.data.images)
@@ -37,6 +42,12 @@ export function CommunityShowcase() {
     fetchImages(1)
   }, [])
 
+  const handleLoadMore = () => {
+    const nextPage = page + 1
+    setPage(nextPage)
+    fetchImages(nextPage)
+  }
+
   const handleCopy = (e: React.MouseEvent, text: string) => {
     e.stopPropagation()
     navigator.clipboard.writeText(text)
@@ -45,6 +56,23 @@ export function CommunityShowcase() {
   const handleRemix = (e: React.MouseEvent, text: string) => {
     e.stopPropagation()
     router.push(`/generate?prompt=${encodeURIComponent(text)}`)
+  }
+
+  const toggleLove = async (e: React.MouseEvent, id: string, currentState: boolean) => {
+    e.stopPropagation()
+    if (!isAdmin) return
+    
+    setTogglingId(id)
+    try {
+      const resp = await axios.post("/api/admin/toggle-love", { generationId: id, isLoved: !currentState })
+      if (resp.data.success) {
+        setImages(prev => prev.map(img => img.id === id ? { ...img, isLoved: resp.data.isLoved } : img))
+      }
+    } catch (err) {
+      console.error("Failed to toggle love", err)
+    } finally {
+      setTogglingId(null)
+    }
   }
 
   return (
@@ -79,6 +107,27 @@ export function CommunityShowcase() {
                    loading="lazy" 
                    className="w-full object-cover transition-transform duration-1000 group-hover:scale-105" 
                 />
+                
+                {/* Admin Love Overlay Top-Right (Always visible if loved, or on hover for admin) */}
+                {!hideHearts && (isAdmin || img.isLoved) && (
+                  <div className={`absolute top-4 right-4 z-10 transition-all duration-300 ${isAdmin ? "opacity-0 group-hover:opacity-100" : "opacity-100"}`}>
+                    <button 
+                      onClick={(e) => toggleLove(e, img.id, img.isLoved)}
+                      className={`p-2.5 rounded-full backdrop-blur-xl border transition-all active:scale-90 ${
+                        img.isLoved 
+                          ? "bg-red-500/20 border-red-500/40 text-red-500" 
+                          : "bg-black/40 border-white/10 text-white/50 hover:text-white"
+                      }`}
+                    >
+                      {togglingId === img.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Heart className={`w-4 h-4 ${img.isLoved ? "fill-current" : ""}`} />
+                      )}
+                    </button>
+                  </div>
+                )}
+
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-5">
                    <p className="text-white text-xs font-black line-clamp-4 mb-4 leading-relaxed tracking-tight">{img.prompt}</p>
                    <div className="flex items-center gap-2">
@@ -100,7 +149,7 @@ export function CommunityShowcase() {
           {hasMore && (
             <div className="flex justify-center mt-16 pb-8">
               <Button 
-                 onClick={() => { setPage(p => p + 1); fetchImages(page + 1) }} 
+                 onClick={handleLoadMore} 
                  disabled={loading} 
                  variant="outline" 
                  className="rounded-full h-14 px-12 text-xs font-black uppercase tracking-widest border-white/10 hover:bg-white/5 group"

@@ -34,21 +34,41 @@ async function main() {
       },
     })
 
-    // ── 3. AUDIT LOG (Security Requirement) ───────────────
-    await prisma.auditLog.create({
-      data: {
-        action: "ADMIN_SEED_EXECUTION",
-        userId: admin.id,
-        entity: "USER",
-        details: `Successfully upserted admin user: ${adminEmail}`,
-      },
-    })
-
     console.log("--------------------------------------------------")
     console.log("✨ ASTRAL SUPREME ADMINISTRATOR MANIFESTED")
     console.log(`Email:    ${admin.email}`)
     console.log("Status:   ACTIVE / SECURE")
-    console.log("Note:     Credentials managed via .env")
+    
+    // ── 3. SEED ANALYTICS (Real data proxy) ────────────────
+    console.log("📊 SEEDING: Generating historical session activity...")
+    
+    const today = new Date()
+    for (let i = 0; i < 7; i++) {
+       const date = new Date()
+       date.setDate(today.getDate() - i)
+       
+       // Create 3-7 logins per day for the admin
+       const loginsToCreate = Math.floor(Math.random() * 5) + 3
+       for (let j = 0; j < loginsToCreate; j++) {
+          await prisma.loginHistory.create({
+            data: {
+              userId: admin.id,
+              ip: `127.0.0.${Math.floor(Math.random() * 255)}`,
+              device: Math.random() > 0.3 ? "Desktop" : "Mobile",
+              createdAt: date
+            }
+          })
+       }
+    }
+
+    // Ensure usage record exists
+    await prisma.usage.upsert({
+      where: { userId: admin.id },
+      update: {},
+      create: { userId: admin.id, count: 42 }
+    })
+
+    console.log("✨ PLATFORM ANALYTICS SYNCHRONIZED")
     console.log("--------------------------------------------------")
 
   } catch (error) {

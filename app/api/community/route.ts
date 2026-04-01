@@ -6,14 +6,18 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url)
     const page = parseInt(searchParams.get("page") || "1")
     const limit = parseInt(searchParams.get("limit") || "12")
+    const lovedOnly = searchParams.get("lovedOnly") === "true"
     const skip = (page - 1) * limit
 
+    const where = {
+      imageUrl: { not: "" },
+      ...(lovedOnly ? { isLoved: true } : {})
+    }
+
     const [total, images] = await Promise.all([
-      (prisma as any).generation.count({
-        where: { imageUrl: { not: "" } }
-      }),
+      (prisma as any).generation.count({ where }),
       (prisma as any).generation.findMany({
-        where: { imageUrl: { not: "" } },
+        where,
         take: limit,
         skip,
         orderBy: { createdAt: "desc" },
@@ -22,6 +26,7 @@ export async function GET(req: Request) {
           imageUrl: true,
           prompt: true,
           createdAt: true,
+          isLoved: true,
           user: { select: { name: true } }
         }
       })

@@ -4,6 +4,7 @@ import { generateImage } from "@/lib/cloudflare_ai"
 import { getServerAuthSession } from "@/lib/auth"
 import { rateLimit, sanitizeInput } from "@/lib/rate-limit"
 import { z } from "zod"
+import { logCreditChange } from "@/lib/credits"
 
 // ── Input schema ───────────────────────────────────────────────
 const generateSchema = z.object({
@@ -87,6 +88,10 @@ export async function POST(req: NextRequest) {
           where: { id: user.id },
           data: { credits: refilled, lastRefill: now }
         })
+
+        // NEW: Log refill
+        await logCreditChange(null, user.id, DAILY_REFILL_AMOUNT, "REFILL", "Automatic 24h spectral refill")
+
         user.credits = refilled
         console.log(`[CREDITS] Refilled ${DAILY_REFILL_AMOUNT} credits for user ${user.id}. New balance: ${refilled}`)
       }
@@ -133,6 +138,14 @@ export async function POST(req: NextRequest) {
         (prisma as any).user.update({
           where: { id: user.id },
           data: { credits: { decrement: 1 } }
+        }),
+        (prisma as any).creditHistory.create({
+          data: {
+            userId: user.id,
+            amount: -1,
+            type: "USAGE",
+            description: `Manifested: ${prompt.substring(0, 30)}...`
+          }
         })
       ])
     ])

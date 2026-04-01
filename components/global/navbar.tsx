@@ -4,14 +4,14 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
-import { 
-  Sparkles, 
-  Menu, 
-  X, 
-  User, 
-  Settings, 
-  LogOut, 
-  LayoutDashboard, 
+import {
+  Sparkles,
+  Menu,
+  X,
+  User,
+  Settings,
+  LogOut,
+  LayoutDashboard,
   Image as ImageIcon,
   History,
   Zap,
@@ -19,7 +19,14 @@ import {
   Bell,
   Search,
   MessageSquare,
-  CreditCard
+  CreditCard,
+  Home,
+  Info,
+  FileText,
+  Wrench,
+  Mail,
+  HelpCircle,
+  Heart
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useSession, signOut } from "next-auth/react"
@@ -45,17 +52,34 @@ export function Navbar() {
   }, [pathname])
 
   const navLinks = [
-    { name: "Generate", href: "/generate", icon: Sparkles },
-    { name: "Feed", href: "/community", icon: ImageIcon },
-    { name: "Pricing", href: "/pricing", icon: Zap },
+    { name: "Home", href: "/", icon: Home },
+    { name: "About", href: "/about", icon: Info },
+    { name: "Blogs", href: "/blog", icon: FileText },
+    { name: "Tools", href: "/tools", icon: Wrench },
+    { name: "Contact", href: "/contact", icon: Mail },
+    { name: "FAQ", href: "/faq", icon: HelpCircle },
+  ]
+
+  // Context-aware profile dropdown links
+  const userRole = (session?.user as any)?.role
+  const profileLinks = [
+    {
+      name: userRole === "ADMIN" ? "Admin Control" : "Dashboard",
+      icon: LayoutDashboard,
+      href: userRole === "ADMIN" ? "/admin" : "/dashboard"
+    },
+    ...(userRole === "ADMIN" ? [{ name: "Loves Curation", icon: Heart, href: "/admin/loves" }] : []),
+    { name: "Aura History", icon: Zap, href: "/dashboard/history/credits" },
+    { name: "Settings", icon: Settings, href: "/dashboard/settings" },
+    { name: "Saved", icon: History, href: "/dashboard/saved" },
+    { name: "Billing", icon: CreditCard, href: "/pricing" },
   ]
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-      scrolled ? "bg-background/80 backdrop-blur-xl border-b border-white/5 py-3" : "bg-transparent py-5"
-    }`}>
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-background/80 backdrop-blur-xl border-b border-white/5 py-3" : "bg-transparent py-5"
+      }`}>
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-        
+
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 shrink-0">
           <span className="text-xl font-black tracking-tighter text-white uppercase leading-none">
@@ -66,12 +90,11 @@ export function Navbar() {
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-8">
           {navLinks.map((link) => (
-            <Link 
-              key={link.name} 
+            <Link
+              key={link.name}
               href={link.href}
-              className={`text-[10px] font-black uppercase tracking-widest transition-colors ${
-                pathname === link.href ? "text-primary" : "text-muted-foreground hover:text-white"
-              }`}
+              className={`text-[10px] font-black uppercase tracking-widest transition-colors ${pathname === link.href ? "text-primary" : "text-muted-foreground hover:text-white"
+                }`}
             >
               {link.name}
             </Link>
@@ -80,10 +103,10 @@ export function Navbar() {
 
         {/* Action Buttons */}
         <div className="hidden md:flex items-center gap-6">
-          
+
           {session ? (
             <div className="flex items-center gap-6">
-              
+
               {/* Credits Badge */}
               <Link href="/pricing">
                 <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 group cursor-pointer hover:bg-primary/20 transition-all">
@@ -102,7 +125,7 @@ export function Navbar() {
 
               {/* Profile Dropdown */}
               <div className="relative">
-                <button 
+                <button
                   onClick={() => setShowProfileMenu(!showProfileMenu)}
                   className="flex items-center gap-3 pl-2 group"
                 >
@@ -131,13 +154,8 @@ export function Navbar() {
                         <p className="text-[9px] text-muted-foreground truncate font-medium">{session.user?.email}</p>
                       </div>
 
-                      {[
-                        { name: "Dashboard", icon: LayoutDashboard, href: "/profile" },
-                        { name: "Settings", icon: Settings, href: "/settings" },
-                        { name: "Saved Visions", icon: History, href: "/saved" },
-                        { name: "Billing", icon: CreditCard, href: "/pricing" },
-                      ].map((item) => (
-                        <Link 
+                      {profileLinks.map((item) => (
+                        <Link
                           key={item.name}
                           href={item.href}
                           onClick={() => setShowProfileMenu(false)}
@@ -150,7 +168,7 @@ export function Navbar() {
 
                       <div className="h-px bg-white/5 my-2" />
 
-                      <button 
+                      <button
                         onClick={() => signOut()}
                         className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-400/5 transition-all w-full text-left"
                       >
@@ -175,7 +193,7 @@ export function Navbar() {
         </div>
 
         {/* Mobile Menu Button */}
-        <button 
+        <button
           className="md:hidden text-white p-2"
           onClick={() => setIsOpen(!isOpen)}
         >
@@ -194,8 +212,8 @@ export function Navbar() {
           >
             <div className="p-6 space-y-4">
               {navLinks.map((link) => (
-                <Link 
-                  key={link.name} 
+                <Link
+                  key={link.name}
                   href={link.href}
                   className="flex items-center gap-4 text-sm font-black uppercase tracking-widest text-muted-foreground"
                 >

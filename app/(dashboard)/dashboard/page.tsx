@@ -349,7 +349,7 @@ export default function DashboardPage() {
                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Total Manifestations</p>
                 <h3 className="text-3xl font-black mt-1">{history.length}</h3>
               </div>
-              <Link href="/history" className="text-[9px] font-black uppercase tracking-widest text-primary mt-4 flex items-center gap-1">
+              <Link href="/dashboard/history/credits" className="text-[9px] font-black uppercase tracking-widest text-primary mt-4 flex items-center gap-1">
                  View History <ChevronRight className="w-3 h-3" />
               </Link>
            </Card>
@@ -361,7 +361,7 @@ export default function DashboardPage() {
                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Saved Insights</p>
                 <h3 className="text-3xl font-black mt-1">{savedPosts.length}</h3>
               </div>
-              <Link href="/saved" className="text-[9px] font-black uppercase tracking-widest text-primary mt-4 flex items-center gap-1">
+              <Link href="/dashboard/saved" className="text-[9px] font-black uppercase tracking-widest text-primary mt-4 flex items-center gap-1">
                  Manage Saves <ChevronRight className="w-3 h-3" />
               </Link>
            </Card>
@@ -378,7 +378,7 @@ export default function DashboardPage() {
                  Aura History
               </h3>
               <div className="flex gap-4 items-center">
-                 <Link href="/history" className="text-[9px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary flex items-center gap-1 group">
+                 <Link href="/dashboard/history/credits" className="text-[9px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary flex items-center gap-1 group">
                     Show All <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                  </Link>
               </div>
@@ -412,7 +412,7 @@ export default function DashboardPage() {
                  <Bookmark className="w-5 h-5 text-blue-500" />
                  Saved Insights
               </h3>
-              <Link href="/saved" className="text-[9px] font-black uppercase tracking-widest text-muted-foreground hover:text-blue-500 flex items-center gap-1 group">
+              <Link href="/dashboard/saved" className="text-[9px] font-black uppercase tracking-widest text-muted-foreground hover:text-blue-500 flex items-center gap-1 group">
                  Show All <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
               </Link>
            </div>

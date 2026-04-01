@@ -12,6 +12,21 @@ export default withAuth(
     const path = req.nextUrl.pathname
     const token = req.nextauth.token
 
+    // ── 0. VISITOR TRACKING (Non-blocking) ────────────────
+    // Track every page view, excluding internal API/assets
+    if (!path.includes(".") && !path.startsWith("/api") && !path.startsWith("/_next")) {
+      const origin = req.nextUrl.origin
+      fetch(`${origin}/api/track-visitor`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "user-agent": req.headers.get("user-agent") || "Unknown",
+          "x-forwarded-for": req.headers.get("x-forwarded-for") || "127.0.0.1"
+        },
+        body: JSON.stringify({ path })
+      }).catch(err => console.error("[MIDDLEWARE_TRACKING_ERROR]:", err))
+    }
+
     // ── 1. ADMIN GUARD ────────────────────────────────────
     if (path.startsWith("/admin") || path.startsWith("/api/admin")) {
       if (!token || token.role !== "ADMIN") {
@@ -55,38 +70,33 @@ export default withAuth(
         // Allow public pages and auth endpoints through
         const publicPaths = [
           "/", "/login", "/register", "/signup", "/blog", "/pricing",
-          "/contact", "/faq", "/tools", "/api/auth", "/api/account/register",
+          "/contact", "/faq", "/tools", "/generate", "/api/auth", "/api/account/register",
           "/api/faqs", "/api/blog", "/api/posts", "/api/contact",
           "/api/comments", "/api/stats",
         ]
-        const isPublic = publicPaths.some(p => path.startsWith(p))
+        const isPublic = publicPaths.some(p => 
+          p === "/" ? path === "/" : path.startsWith(p)
+        )
         if (isPublic) return true
 
         // Everything else requires a valid token
         return !!token
       }
-    }
+    },
+    pages: {
+      signIn: '/login',
+    },
   }
 )
 
 export const config = {
   matcher: [
-    // Protected UI routes
-    "/dashboard/:path*",
-    "/history/:path*",
-    "/generate/:path*",
-    "/settings/:path*",
-    "/saved/:path*",
-    "/billing/:path*",
-    "/admin/:path*",
-    // Protected API routes
-    "/api/generate/:path*",
-    "/api/generate-image/:path*",
-    "/api/history/:path*",
-    "/api/user/:path*",
-    "/api/account/:path*",
-    "/api/saved/:path*",
-    "/api/upload/:path*",
-    "/api/admin/:path*",
+    // ── Track All Pages ──────────────────────────────────
+    // Matches all paths except for the ones starting with:
+    // - api (API routes) -> Except /api/track-visitor (actually track-visitor is called from middleware)
+    // - _next/static (static files)
+    // - _next/image (image optimization files)
+    // - favicon.ico (favicon file)
+    "/((?!api|_next/static|_next/image|favicon.ico).*)",
   ]
 }

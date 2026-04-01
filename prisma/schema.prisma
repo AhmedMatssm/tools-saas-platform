@@ -33,6 +33,7 @@ model User {
   savedImages      SavedImage[]
   savedPosts       SavedPost[]
   usage            Usage?
+  creditHistory    CreditHistory[]
 }
 
 model LoginHistory {
@@ -52,6 +53,7 @@ model Generation {
   imageUrl  String
   createdAt DateTime @default(now())
   ip        String?
+  isLoved   Boolean  @default(false)
   userId    String?
   user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -190,4 +192,40 @@ model AuditLog {
   entity    String?
   details   String?
   createdAt DateTime @default(now())
+}
+
+model CreditHistory {
+  id          String   @id @default(cuid())
+  userId      String
+  amount      Int      // e.g. +5 for reward, -1 for usage
+  type        String   // REWARD, USAGE, REFILL, PURCHASE, ADMIN
+  description String?
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+}
+
+model Visitor {
+  id          String     @id @default(cuid())
+  ipHash      String
+  userAgent   String?
+  createdAt   DateTime   @default(now())
+  pageViews   PageView[]
+
+  @@index([ipHash])
+  @@index([createdAt])
+}
+
+model PageView {
+  id        String   @id @default(cuid())
+  visitorId String
+  path      String
+  createdAt DateTime @default(now())
+  visitor   Visitor  @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+
+  @@index([visitorId])
+  @@index([createdAt])
+  @@index([path])
 }
