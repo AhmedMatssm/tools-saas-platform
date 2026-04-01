@@ -1,0 +1,193 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String         @id @default(cuid())
+  name             String?
+  email            String?        @unique
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  role             Role           @default(USER)
+  password         String?
+  apiKey           String?        @unique
+  billingCycle     DateTime?
+  credits          Int            @default(10)
+  lastRefill       DateTime       @default(now())
+  lastClaim        DateTime?
+  emailAlerts      Boolean        @default(true)
+  language         String         @default("EN")
+  plan             String         @default("FREE")
+  theme            String         @default("DARK")
+  twoFactorEnabled Boolean        @default(false)
+  twoFactorSecret  String?
+  comments         Comment[]
+  generations      Generation[]
+  logins           LoginHistory[]
+  likes            PostLike[]
+  savedImages      SavedImage[]
+  savedPosts       SavedPost[]
+  usage            Usage?
+}
+
+model LoginHistory {
+  id        String   @id @default(cuid())
+  userId    String
+  ip        String?
+  device    String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Generation {
+  id        String   @id @default(cuid())
+  prompt    String
+  imageUrl  String
+  createdAt DateTime @default(now())
+  ip        String?
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model SavedImage {
+  id        String   @id @default(cuid())
+  imageUrl  String
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Blog {
+  id          String    @id @default(cuid())
+  title       String
+  slug        String    @unique
+  content     String
+  image       String?
+  published   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  canonical   String?
+  category    String    @default("General")
+  excerpt     String    @default("")
+  keywords    String[]
+  metaDesc    String    @default("")
+  metaTitle   String    @default("")
+  ogImage     String?
+  readTime    Int       @default(0)
+  scheduledAt DateTime?
+  tags        String[]
+  views       Int       @default(0)
+  comments    Comment[]
+  likes       PostLike[]
+  savedPosts  SavedPost[]
+
+  @@index([published])
+  @@index([category])
+  @@index([slug])
+}
+
+model Faq {
+  id          String   @id @default(cuid())
+  question    String
+  answer      String
+  category    String   @default("General")
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SupportDoc {
+  id          String   @id @default(cuid())
+  question    String
+  answer      String
+  category    String   @default("General")
+  tags        String?
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
+model UserQuestion {
+  id         String   @id @default(cuid())
+  name       String?
+  email      String?
+  question   String
+  answer     String?
+  source     String   @default("CONTACT_FORM")
+  isResolved Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  ip         String?
+  helpful    Boolean?
+}
+
+model Usage {
+  id     String @id @default(cuid())
+  count  Int    @default(0)
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PostLike {
+  id        String   @id @default(cuid())
+  userId    String
+  postId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@index([postId])
+  post      Blog     @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
+
+model Comment {
+  id        String    @id @default(cuid())
+  postId    String
+  userId    String
+  content   String
+  parentId  String?
+  status    String    @default("PENDING")
+  createdAt DateTime  @default(now())
+  parent    Comment?  @relation("ThreadReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[] @relation("ThreadReplies")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@index([status])
+  post      Blog      @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
+
+model SavedPost {
+  id        String   @id @default(cuid())
+  userId    String
+  postId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@index([postId])
+  post      Blog     @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  userId    String?
+  entity    String?
+  details   String?
+  createdAt DateTime @default(now())
+}
