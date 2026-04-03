@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client"
-import { notifyUser } from "../lib/notifications"
+import { notifyUser } from "../services/notifications.service"
 
 const prisma = new PrismaClient()
 
