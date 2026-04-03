@@ -49,6 +49,7 @@ export default withAuth(
       "/api/account/billing",
       "/api/saved",
       "/api/upload",
+      "/api/notifications", // CRITICAL: Added notifications protection
     ]
 
     const isProtectedApi = protectedApiPaths.some(p => path.startsWith(p))
@@ -61,18 +62,30 @@ export default withAuth(
         { status: 401 }
       )
     }
+
+    // ── 3. SECURITY HEADERS ────────────────────────────────
+    const response = NextResponse.next()
+    response.headers.set("X-Frame-Options", "DENY")
+    response.headers.set("X-Content-Type-Options", "nosniff")
+    response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin")
+    response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+    return response
   },
   {
     callbacks: {
       authorized: ({ req, token }) => {
         const path = req.nextUrl.pathname
 
+        // Skip auth for static files, robots, sitemap, etc.
+        if (path.includes(".") || path.startsWith("/_next")) return true
+
         // Allow public pages and auth endpoints through
         const publicPaths = [
           "/", "/login", "/register", "/signup", "/blog", "/pricing",
-          "/contact", "/faq", "/tools", "/generate", "/api/auth", "/api/account/register",
+          "/contact", "/faq", "/tools", "/api/auth", "/api/account/register",
           "/api/faqs", "/api/blog", "/api/posts", "/api/contact",
-          "/api/comments", "/api/stats",
+          "/api/comments", "/api/stats", "/api/track-visitor",
+          "/reset-password", "/api/account/reset-password", "/api/chat"
         ]
         const isPublic = publicPaths.some(p => 
           p === "/" ? path === "/" : path.startsWith(p)
@@ -91,12 +104,7 @@ export default withAuth(
 
 export const config = {
   matcher: [
-    // ── Track All Pages ──────────────────────────────────
-    // Matches all paths except for the ones starting with:
-    // - api (API routes) -> Except /api/track-visitor (actually track-visitor is called from middleware)
-    // - _next/static (static files)
-    // - _next/image (image optimization files)
-    // - favicon.ico (favicon file)
-    "/((?!api|_next/static|_next/image|favicon.ico).*)",
+    // Include all paths, let logic decide inside middleware
+    "/((?!_next/static|_next/image|favicon.ico).*)",
   ]
 }

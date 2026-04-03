@@ -1,6 +1,6 @@
 "use client"
 
-import { useCreditsContext } from "@/components/global/credits-provider"
+import { useCreditsContext } from "@/components/layout/credits-provider"
 
 /**
  * Hook to consume the global Credits context.
@@ -11,4 +11,4 @@ export function useCredits() {
   return useCreditsContext()
 }
 
-export type { UserCreditsData, UseCreditsReturn } from "@/components/global/credits-provider"
+export type { UserCreditsData, UseCreditsReturn } from "@/components/layout/credits-provider"

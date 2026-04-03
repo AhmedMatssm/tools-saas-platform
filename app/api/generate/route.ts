@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 import { generateImage } from "@/lib/cloudflare_ai"
 import { getServerAuthSession } from "@/lib/auth"
-import { rateLimit, sanitizeInput } from "@/lib/rate-limit"
+import { rateLimit, sanitizeInput } from "@/utils/security"
 import { z } from "zod"
-import { logCreditChange } from "@/lib/credits"
+import { logCreditChange } from "@/services/credits.service"
 
 // ── Input schema ───────────────────────────────────────────────
 const generateSchema = z.object({

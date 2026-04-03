@@ -1,8 +1,8 @@
 "use client"
 
 import { useSession } from "next-auth/react"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Card } from "@/components/common/card"
+import { Button } from "@/components/common/button"
 import { 
   Check,
   Gift,
@@ -30,7 +30,7 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import axios from "axios"
 import { useCredits } from "@/hooks/use-credits"
-import { showToast } from "@/lib/toast"
+import { showToast } from "@/utils/toast"
 
 export default function DashboardPage() {
   const { data: session, status } = useSession()

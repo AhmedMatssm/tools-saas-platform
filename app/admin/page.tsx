@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Card } from "@/components/common/card"
+import { Button } from "@/components/common/button"
 import { AreaChart, Users, Zap, FileText, Activity, ArrowUpRight, TrendingUp, Monitor, Shield, MessageCircle, ThumbsUp, Bookmark } from "lucide-react"
 import axios from "axios"
 import { motion } from "framer-motion"

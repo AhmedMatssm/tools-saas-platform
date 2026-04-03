@@ -3,12 +3,12 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Shield, Plus, Loader2, Save, Trash, CheckCircle2, MessageSquare, AlertTriangle, MessageCircle } from "lucide-react"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import { Card } from "@/components/common/card"
+import { Button } from "@/components/common/button"
+import { Input } from "@/components/common/input"
+import { Textarea } from "@/components/common/textarea"
 import axios from "axios"
-import { showToast } from "@/lib/toast"
+import { showToast } from "@/utils/toast"
 
 export default function AdminSupportDashboard() {
   const [data, setData] = useState<{ faqs: any[], questions: any[], docs: any[] }>({ faqs: [], questions: [], docs: [] })

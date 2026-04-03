@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { Navbar } from "@/components/global/navbar";
-import { Footer } from "@/components/global/footer";
-import { CookieConsent } from "@/components/global/cookie-consent";
-import { cn } from "@/lib/utils";
-import { Providers } from "@/components/global/providers";
-import { Chatbot } from "@/components/global/chatbot";
+import { Navbar } from "@/components/layout/navbar";
+import { Footer } from "@/components/layout/footer";
+import { CookieConsent } from "@/components/layout/cookie-consent";
+import { cn } from "@/utils";
+import { Providers } from "@/components/layout/providers";
+import { Chatbot } from "@/components/layout/chatbot";
 
 const inter = Inter({ subsets: ["latin"] });
 

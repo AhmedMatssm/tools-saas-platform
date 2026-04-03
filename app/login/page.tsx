@@ -1,9 +1,9 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import { Button } from "@/components/common/button"
+import { Card } from "@/components/common/card"
 import { Mail, Sparkles, Wand2 } from "lucide-react"
-import { Github } from "@/components/global/icons"
+import { Github } from "@/components/layout/icons"
 import { signIn } from "next-auth/react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
@@ -102,7 +102,15 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-2">
-                 <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Password</label>
+                 <div className="flex items-center justify-between ml-1">
+                   <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Password</label>
+                   <Link 
+                     href="/reset-password" 
+                     className="text-[10px] font-bold text-primary hover:underline uppercase tracking-tighter opacity-70 hover:opacity-100 transition-opacity"
+                   >
+                     Forgot?
+                   </Link>
+                 </div>
                  <input 
                    disabled={isLoading}
                    type="password" 

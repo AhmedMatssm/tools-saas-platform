@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react"
 import { useSession, signOut, getSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import { Button } from "@/components/common/button"
+import { Card } from "@/components/common/card"
 import {
   User, Shield, Bell, CreditCard,
   LogOut, Loader2, Check, X, Eye, EyeOff,
@@ -560,47 +560,27 @@ export default function SettingsPage() {
             {/* ─ NOTIFICATIONS ─ */}
             {activeTab === "notifications" && (
               <motion.div key="notifications" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }}>
-                <Section title="Global Settings Preferences" subtitle="Platform behavior and Email toggles">
-                  <div className="space-y-4">
-                    {(Object.entries(notifs) as [keyof typeof notifs, boolean][]).map(([key, value]) => {
-                      const labels: Record<keyof typeof notifs, { title: string; desc: string }> = {
-                        marketing: { title: "Product Promos", desc: "New features, offers, and platform news." },
-                        security: { title: "Security Alerts", desc: "Login notifications and suspicious activity warnings." },
-                        updates: { title: "Essential Platform Alerts", desc: "Important changes tracked securely natively to DB state and your account updates." },
-                        digest: { title: "Weekly Generation Ledger", desc: "A weekly round-up of your creations and platform activity via Email." },
-                      }
-                      return (
-                        <div key={key} className="flex items-center justify-between p-6 rounded-2xl border border-white/5 bg-white/[0.02] hover:border-white/10 transition-all">
-                          <div className="space-y-1 pr-6">
-                            <h4 className="text-sm font-black">{labels[key].title} {key === 'updates' && <span className="opacity-50 text-[10px] ml-1 uppercase">(Syncs to DB)</span>}</h4>
-                            <p className="text-xs text-muted-foreground">{labels[key].desc}</p>
-                          </div>
-                          <button
-                            onClick={() => toggleNotificationPref(key, !value)}
-                            className={`relative w-12 h-6 rounded-full transition-all shrink-0 border border-white/5 shadow-inner ${value ? "bg-primary" : "bg-black"}`}
-                          >
-                            <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${value ? "left-6" : "left-1"}`} />
-                          </button>
-                        </div>
-                      )
-                    })}
-                  </div>
-                  <div className="flex justify-end pt-2 border-t border-white/5">
-                    <Button
-                      onClick={() => fire(userConfig?.language === "EN" ? "Saved correctly" : "Updated")}
-                      variant="premium"
-                      className="rounded-xl px-10 h-11 text-xs font-black uppercase tracking-widest shadow-lg gap-2"
-                    >
-                      <Check className="w-4 h-4" /> Save General Core States
-                    </Button>
-                  </div>
-                </Section>
-              </motion.div>
+                    <div className="p-8 rounded-2xl border border-indigo-500/20 bg-indigo-500/[0.03] space-y-6 text-center">
+                      <div className="w-16 h-16 bg-indigo-500/10 rounded-2xl flex items-center justify-center mx-auto text-indigo-500">
+                        <Bell className="w-8 h-8" />
+                      </div>
+                      <div className="space-y-2">
+                        <h3 className="text-xl font-black">Configure Your Aura Alerts</h3>
+                        <p className="text-xs text-muted-foreground max-w-sm mx-auto leading-relaxed uppercase tracking-widest font-bold">
+                          Manage delivery channels (In-App/Email) and fine-tune notifications for credits, security, and system updates.
+                        </p>
+                      </div>
+                      <Link href="/dashboard/settings/notifications">
+                        <Button variant="premium" className="rounded-xl px-10 h-12 text-xs font-black uppercase tracking-widest gap-2 shadow-lg">
+                          Manage Notifications <ArrowRight className="w-4 h-4" />
+                        </Button>
+                      </Link>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             )}
-
-          </AnimatePresence>
-          )}
-        </main>
+           </main>
       </div>
     </div>
   )

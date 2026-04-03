@@ -1,10 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import { Button } from "@/components/common/button"
+import { Card } from "@/components/common/card"
 import { Sparkles, ArrowRight, User, Mail, Lock } from "lucide-react"
-import { Github } from "@/components/global/icons"
+import { Github } from "@/components/layout/icons"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { useRouter, useSearchParams } from "next/navigation"

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 import { getServerAuthSession } from "@/lib/auth"
-import { logCreditChange } from "@/lib/credits"
+import { logCreditChange } from "@/services/credits.service"
 
 const DAILY_REWARD = 1
 const CLAIM_INTERVAL_HOURS = 24

@@ -11,3 +11,7 @@ logs/
 .DS_Store
 .vscode/
 .gemini/
+playwright-report/
+test-results/
+*.js.map
+*.ts.map

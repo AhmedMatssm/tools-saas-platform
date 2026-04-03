@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 import { getServerAuthSession } from "@/lib/auth"
-import { logCreditChange } from "@/lib/credits"
+import { logCreditChange } from "@/services/credits.service"
 
 /**
  * GET /api/user
@@ -21,15 +21,20 @@ export async function GET() {
       where: { id: session.user.id }
     })
 
-    if (user) {
-      // Safely delete sensitive data before returning
+    if (!user) {
+      console.error(`[API_USER] User not found in database for ID: ${session.user.id}. Session might be stale after a database reset/push.`)
+      return NextResponse.json({ 
+        error: "User manifestation not found", 
+        debug: "Session exists but DB record is missing. Try logging out and in.",
+        id: session.user.id 
+      }, { status: 404 })
+    }
+
+    // Safely delete sensitive data before returning
+    if (user.password) {
       delete user.password
     }
 
-    if (!user) {
-      console.error(`[API_USER] User not found: ${session.user.id}`)
-      return NextResponse.json({ error: "User not found" }, { status: 404 })
-    }
 
     // ── AUTOMATIC 24H REFILL LOGIC ───────────────────────
     try {

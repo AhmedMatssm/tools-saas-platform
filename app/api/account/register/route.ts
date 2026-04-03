@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 import { z } from "zod"
-import { logCreditChange } from "@/lib/credits"
+import { logCreditChange } from "@/services/credits.service"
 
 const registerSchema = z.object({
   name: z.string().min(2),
@@ -40,8 +40,20 @@ export async function POST(req: NextRequest) {
         }
       })
 
-      // NEW: Log initial credits for new user
+      // NEW: Initialize Notification Settings
+      await tx.notificationSettings.create({
+        data: { userId: newUser.id }
+      })
+
+      // NEW: Log initial credits for new user (this also sends a notification via logCreditChange)
       await logCreditChange(tx, newUser.id, 10, "REFILL", "Welcome Bonus - Initial Aura Manifested")
+
+      // 1b. Send a general welcome notification (Different from the credit one)
+      const { dispatchNotification } = await import("@/services/notifications.service")
+      await dispatchNotification("USER_SIGNUP", {
+        userId: newUser.id,
+        data: { name }
+      })
 
       // 2. If valid referrerId, reward the friend (+5 credits)
       if (referrerId) {
@@ -53,7 +65,7 @@ export async function POST(req: NextRequest) {
               where: { id: referrerId },
               data: { credits: { increment: 5 } }
             })
-            // NEW: Log referral reward for referrer
+            // Log credit change (this handles notifying the referrer)
             await logCreditChange(tx, referrerId, 5, "REWARD", `Referral Reward - Seeker ${name} joined`)
           } else {
             console.warn(`[REFERRAL_REWARD] Referrer with ID ${referrerId} not found.`)

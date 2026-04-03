@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { trackVisitor } from "@/lib/analytics"
+import { trackVisitor } from "@/services/analytics.service"
 
 /**
  * POST /api/track-visitor

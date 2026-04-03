@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
 import { ThumbsUp, Share2, ArrowRight, CornerDownRight, Bookmark, User } from "lucide-react"
-import { showToast } from "@/lib/toast"
+import { showToast } from "@/utils/toast"
 
 export default function BlogInteractions({ postId }: { postId: string }) {
   const { data: session } = useSession()

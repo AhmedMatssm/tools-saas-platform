@@ -27,16 +27,20 @@ declare module "next-auth/jwt" {
   }
 }
 
+import { dispatchNotification } from "@/services/notifications.service"
+
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
     GithubProvider({
       clientId: process.env.GITHUB_ID!,
       clientSecret: process.env.GITHUB_SECRET!,
+      allowDangerousEmailAccountLinking: true,
     }),
     GoogleProvider({
       clientId: process.env.GOOGLE_ID!,
       clientSecret: process.env.GOOGLE_SECRET!,
+      allowDangerousEmailAccountLinking: true,
     }),
     EmailProvider({
       server: process.env.EMAIL_SERVER,
@@ -78,7 +82,7 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id
-        token.role = user.role || "USER"
+        token.role = (user as any).role || "USER"
       }
       return token
     },
@@ -87,9 +91,6 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id
         session.user.role = token.role
 
-        // ── Always fetch fresh user data from DB ────────────
-        // JWT strategy caches data in the token, so profile
-        // updates wouldn't reflect without this DB lookup.
         try {
           const freshUser = await prisma.user.findUnique({
             where: { id: token.id },
@@ -100,9 +101,7 @@ export const authOptions: NextAuthOptions = {
             session.user.email = freshUser.email
             session.user.role = freshUser.role
           }
-        } catch (_) {
-          // Fall back to token values if DB is unreachable
-        }
+        } catch (_) {}
       }
       return session
     },
@@ -112,7 +111,6 @@ export const authOptions: NextAuthOptions = {
   },
   events: {
     async signIn({ user }) {
-      // ── Session Manifestation Logging ───────────────
       try {
         const { headers } = await import("next/headers")
         const headerList = headers()
@@ -121,43 +119,73 @@ export const authOptions: NextAuthOptions = {
         const device = userAgent.toLowerCase().includes("mobile") ? "Mobile" : "Desktop"
 
         if (user?.id) {
-          await prisma.loginHistory.create({
-            data: {
-              userId: user.id,
-              ip,
-              device
-            }
+          // Check for previous logins on this device
+          const previousLogin = await prisma.loginHistory.findFirst({
+            where: { userId: user.id, device }
           })
-          console.log(`[LOGIN_EVENT] Spectral session recorded for ${user.email} (${device})`)
+
+          await prisma.loginHistory.create({
+            data: { userId: user.id, ip, device }
+          })
+
+          if (!previousLogin) {
+            // SECURITY ALERT: First time on this device
+            await dispatchNotification("SECURITY_ALERT", {
+              userId: user.id,
+              data: { details: `New ${device} detected - IP: ${ip}` }
+            })
+          } else {
+            // NOTIFY: Standard Login Success
+            await dispatchNotification("USER_LOGIN", {
+              userId: user.id,
+              data: { device, ip }
+            })
+          }
         }
       } catch (err) {
-        console.error("[LOGIN_EVENT_ERROR]:", err)
+        console.error("[SECURITY_LAYER_ERROR]:", err)
       }
     },
     async createUser({ user }: { user: any }) {
-      // ── Social Signup Referral Processing ───────────────
-      // Catch referrals for Google/Github seekers
       try {
         const { cookies } = await import("next/headers")
         const cookieStore = cookies()
         const referrerId = (await cookieStore).get("astral_ref_id")?.value
 
+        // Initialize Notification Settings
+        await prisma.notificationSettings.upsert({
+          where: { userId: user.id },
+          update: {},
+          create: { userId: user.id }
+        })
+
+        // Dispatch Welcome Notification
+        await dispatchNotification("USER_SIGNUP", {
+          userId: user.id,
+          data: { name: user.name }
+        })
+
         if (referrerId && user.id) {
-          console.log(`[SOCIAL_REFERRAL] New seeker ${user.email} joined via ${referrerId}`)
-
-          await prisma.user.update({
-            where: { id: referrerId },
-            data: { credits: { increment: 5 } }
-          })
-
-          console.log(`[SOCIAL_REFERRAL] Successfully awarded +5 Aura to referrer: ${referrerId}`)
+          // Referral Reward
+          const referrer = await prisma.user.findUnique({ where: { id: referrerId } })
+          if (referrer) {
+             await prisma.user.update({
+                where: { id: referrerId },
+                data: { credits: { increment: 5 } }
+             })
+             
+             // Log credit change (this handles notifying the referrer)
+             const { logCreditChange } = await import("@/services/credits.service")
+             await logCreditChange(null, referrerId, 5, "REWARD", `Referral Reward - Seeker ${user.name || 'Anonymous'} joined`)
+          }
         }
       } catch (err) {
-        console.error("[SOCIAL_REFERRAL_ERROR]:", err)
+        console.error("[SOCIAL_SIGNUP_EVENT_ERROR]:", err)
       }
     }
   }
 }
+
 
 import { getServerSession } from "next-auth/next"
 export const getServerAuthSession = () => getServerSession(authOptions)

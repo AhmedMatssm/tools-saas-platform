@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma"
 import { getServerAuthSession } from "@/lib/auth"
 import bcrypt from "bcryptjs"
 import { z } from "zod"
+import { notifyUser } from "@/services/notifications.service"
 
 const settingsActionSchema = z.object({
   action: z.enum(["GENERATE_API_KEY", "REVOKE_API_KEY", "UPDATE_PREFS", "DELETE_ACCOUNT"]),
@@ -19,11 +20,13 @@ export async function GET() {
       select: {
         plan: true, credits: true, billingCycle: true, apiKey: true,
         twoFactorEnabled: true, language: true, theme: true, emailAlerts: true,
+        notificationSettings: true,
         logins: { take: 5, orderBy: { createdAt: "desc" } }
       }
     })
 
     return NextResponse.json({ success: true, data: user })
+
   } catch (error) {
     return NextResponse.json({ error: "Failed to load settings" }, { status: 500 })
   }
@@ -46,11 +49,27 @@ export async function POST(req: Request) {
     if (action === "GENERATE_API_KEY") {
       const newKey = "sk-live-" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
       await prisma.user.update({ where: { id: session.user.id }, data: { apiKey: newKey } })
+      
+      await notifyUser({
+        userId: session.user.id,
+        title: "New API Key Generated",
+        message: "A new spectral entry point has been manifested.",
+        type: "SUCCESS"
+      })
+
       return NextResponse.json({ success: true, apiKey: newKey })
     }
 
     if (action === "REVOKE_API_KEY") {
       await prisma.user.update({ where: { id: session.user.id }, data: { apiKey: null } })
+      
+      await notifyUser({
+        userId: session.user.id,
+        title: "API Key Revoked",
+        message: "A spectral gate has been sealed for your security.",
+        type: "WARNING"
+      })
+
       return NextResponse.json({ success: true })
     }
 

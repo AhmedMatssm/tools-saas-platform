@@ -1,5 +1,5 @@
 import { revalidatePath } from "next/cache"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/common/button"
 import prisma from "@/lib/prisma"
 
 export default async function AdminCommentsPage() {

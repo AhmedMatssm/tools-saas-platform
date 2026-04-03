@@ -4,7 +4,7 @@ import { useSession } from "next-auth/react"
 import { useCredits } from "@/hooks/use-credits"
 import { motion } from "framer-motion"
 import { Zap, Gift, Star, ShoppingCart, Clock, TrendingUp, Sparkles } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/common/button"
 import Link from "next/link"
 
 export default function PricingPage() {

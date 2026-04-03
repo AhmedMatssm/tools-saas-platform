@@ -1,13 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
+import { Button } from "@/components/common/button"
+import { Card } from "@/components/common/card"
+import { Input } from "@/components/common/input"
 import { Sparkles, Download, Share2, Copy, Trash2, Wand2, Loader2, Image as ImageIcon, Zap } from "lucide-react"
 import { motion } from "framer-motion"
 import axios from "axios"
-import { showToast } from "@/lib/toast"
+import { showToast } from "@/utils/toast"
 import { useSession } from "next-auth/react"
 
 import { useRouter, useSearchParams } from "next/navigation"

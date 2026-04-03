@@ -1,4 +1,4 @@
-import { ImageGenerationInput } from '@/lib/validations/ai';
+import { ImageGenerationInput } from '@/utils/validators';
 
 const CLOUDFLARE_API_URL = `https://api.cloudflare.com/client/v4/accounts/${process.env.CLOUDFLARE_ACCOUNT_ID}/ai/run`;
 

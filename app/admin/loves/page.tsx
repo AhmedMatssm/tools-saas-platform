@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import axios from "axios"
 import { Sparkles, Copy, Trash2, Loader2, Heart } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/common/button"
 
 export default function AdminLovesPage() {
   const [images, setImages] = useState<any[]>([])

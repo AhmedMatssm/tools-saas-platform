@@ -1,7 +1,7 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import { Button } from "@/components/common/button"
+import { Card } from "@/components/common/card"
 import { 
   Sparkles, 
   Mail, 
@@ -16,6 +16,35 @@ import Link from "next/link"
 
 export default function ResetPasswordPage() {
   const [step, setStep] = useState(1)
+  const [email, setEmail] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleResetRequest = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email) return
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const response = await fetch("/api/account/reset-password-request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      })
+
+      if (response.ok) {
+        setStep(2)
+      } else {
+        const data = await response.json()
+        setError(data.error || "Failed to dispatch link.")
+      }
+    } catch (err) {
+       setError("Connection to Aura Network failed.")
+    } finally {
+       setIsLoading(false)
+    }
+  }
 
   return (
     <div className="min-h-[calc(100vh-16rem)] flex items-center justify-center p-6 bg-mesh bg-opacity-10 relative overflow-hidden">
@@ -49,28 +78,37 @@ export default function ResetPasswordPage() {
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-6"
                >
-                  <div className="space-y-2">
-                     <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Email Address</label>
-                     <div className="relative group/input">
-                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within/input:text-blue-500 transition-colors" />
-                        <input 
-                           type="email" 
-                           placeholder="name@company.com" 
-                           className="w-full bg-background border border-border p-4 pl-12 rounded-xl outline-none focus:border-blue-500/50 text-sm transition-all shadow-inner"
-                        />
-                     </div>
-                  </div>
+                  <form onSubmit={handleResetRequest} className="space-y-6">
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Email Address</label>
+                       <div className="relative group/input">
+                          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within/input:text-blue-500 transition-colors" />
+                          <input 
+                             disabled={isLoading}
+                             type="email" 
+                             value={email}
+                             onChange={(e) => setEmail(e.target.value)}
+                             placeholder="name@company.com" 
+                             className="w-full bg-background border border-border p-4 pl-12 rounded-xl outline-none focus:border-blue-500/50 text-sm transition-all shadow-inner disabled:opacity-50"
+                             required
+                          />
+                       </div>
+                       {error && <p className="text-[10px] font-bold text-destructive uppercase tracking-widest text-center mt-2">{error}</p>}
+                    </div>
 
-                  <Button 
-                    variant="premium" 
-                    onClick={() => setStep(2)}
-                    className="w-full h-14 rounded-xl text-xs font-black uppercase tracking-widest shadow-xl gap-2 group/btn"
-                  >
-                     Send Reset Link
-                     <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-                  </Button>
+                    <Button 
+                      disabled={isLoading}
+                      type="submit"
+                      variant="premium" 
+                      className="w-full h-14 rounded-xl text-xs font-black uppercase tracking-widest shadow-xl gap-2 group/btn"
+                    >
+                       {isLoading ? "Dispatching..." : "Send Reset Link"}
+                       <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                    </Button>
+                  </form>
                </motion.div>
              ) : (
+
                <motion.div
                   key="step2"
                   initial={{ opacity: 0, x: 20 }}

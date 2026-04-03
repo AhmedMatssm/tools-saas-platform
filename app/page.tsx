@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import { Button } from "@/components/common/button"
+import { Card } from "@/components/common/card"
 import {
   Sparkles, Wand2, Image as ImageIcon, Zap, ChevronRight,
   Play, ExternalLink, Bolt, Users, TrendingUp, Globe,
@@ -12,7 +12,7 @@ import { motion, useInView } from "framer-motion"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import axios from "axios"
-import { CommunityShowcase } from "@/components/global/community-showcase"
+import { CommunityShowcase } from "@/components/layout/community-showcase"
 
 // ── Animated counter hook ──────────────────────────────────────
 function useCounter(target: number, duration = 2000) {

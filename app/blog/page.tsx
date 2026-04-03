@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Card } from "@/components/common/card"
+import { Button } from "@/components/common/button"
 import { Search, Tag, Clock, TrendingUp, ArrowRight, BookOpen, ChevronLeft, ChevronRight, Filter } from "lucide-react"
 import { motion } from "framer-motion"
 import Link from "next/link"

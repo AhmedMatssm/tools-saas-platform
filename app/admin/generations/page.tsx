@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+import { Input } from "@/components/common/input"
+import { Button } from "@/components/common/button"
 import { Search, ChevronLeft, ChevronRight, Loader2, Monitor, MapPin, AlignLeft, Calendar, User, Eye, Download, X, Heart } from "lucide-react"
 import axios from "axios"
 import { AnimatePresence, motion } from "framer-motion"
