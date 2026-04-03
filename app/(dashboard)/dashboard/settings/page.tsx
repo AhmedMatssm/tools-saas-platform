@@ -5,10 +5,11 @@ import { useSession, signOut, getSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/common/button"
 import { Card } from "@/components/common/card"
+import Link from "next/link"
 import {
   User, Shield, Bell, CreditCard,
   LogOut, Loader2, Check, X, Eye, EyeOff,
-  Lock, Zap, AlertTriangle, Settings, Copy, Monitor, Calendar, History
+  Lock, Zap, AlertTriangle, Settings, Copy, Monitor, Calendar, History, ArrowRight
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import axios from "axios"

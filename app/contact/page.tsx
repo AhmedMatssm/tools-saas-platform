@@ -45,7 +45,7 @@ export default function SecureContactPage() {
       }
     } catch (e: any) {
       if (e instanceof z.ZodError) {
-        setErrorMsg(e.errors[0].message)
+        setErrorMsg(e.issues[0].message)
       } else {
         setErrorMsg(e.response?.data?.error || "An unexpected security block occurred.")
       }

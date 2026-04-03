@@ -60,7 +60,7 @@ export default function ContentAdminPage() {
           {["All", "Tools", "Blog Posts", "Categories", "Docs"].map(tab => (
              <Button 
                key={tab} 
-               variant={activeType === tab ? "primary" : "outline"}
+               variant={activeType === tab ? "premium" : "outline"}
                onClick={() => setActiveType(tab)}
                className="h-10 rounded-xl px-6 text-[10px] font-black uppercase tracking-widest transition-all"
              >

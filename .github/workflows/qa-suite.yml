@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 env:
-  TARGET_URL: https://your-site.com # Replace with your production/staging URL
+  TARGET_URL: https://astralai-seven.vercel.app/ # Replace with your production/staging URL
 
 jobs:
   qa-suite:
