@@ -90,7 +90,7 @@ const worker = new Worker(
        })
 
        if (user?.email) {
-          const { sendEmail } = await import("../lib/mail")
+          const { sendEmail } = await import("../services/mail.service")
           console.log(`[NOTIFY] user=${userId} event=${eventType} status=SENDING_EMAIL`)
           
           await sendEmail({
