@@ -2,13 +2,13 @@ import { withAuth } from "next-auth/middleware"
 import { NextResponse } from "next/server"
 
 /**
- * Zero-Trust Edge Middleware
+ * Zero-Trust Edge Proxy (formerly Middleware)
  * - Admin routes: require ADMIN role
  * - Protected UI routes: require any valid session → redirect to /login
  * - Protected API routes: require any valid session → return 401
  */
 export default withAuth(
-  function middleware(req) {
+  function proxy(req) {
     const path = req.nextUrl.pathname
     const token = req.nextauth.token
 
@@ -24,7 +24,7 @@ export default withAuth(
           "x-forwarded-for": req.headers.get("x-forwarded-for") || "127.0.0.1"
         },
         body: JSON.stringify({ path })
-      }).catch(err => console.error("[MIDDLEWARE_TRACKING_ERROR]:", err))
+      }).catch(err => console.error("[PROXY_TRACKING_ERROR]:", err))
     }
 
     // ── 1. ADMIN GUARD ────────────────────────────────────
@@ -45,15 +45,14 @@ export default withAuth(
       "/api/generate-image",
       "/api/history",
       "/api/user",
-      "/api/account/settings", // Only protect specific sub-paths if /api/account is partly public
+      "/api/account/settings",
       "/api/account/billing",
       "/api/saved",
       "/api/upload",
-      "/api/notifications", // CRITICAL: Added notifications protection
+      "/api/notifications",
     ]
 
     const isProtectedApi = protectedApiPaths.some(p => path.startsWith(p))
-    // Explicitly allow registration even if it matches the prefix (though we've changed the list above)
     const isRegisterApi = path === "/api/account/register"
 
     if (isProtectedApi && !isRegisterApi && !token) {
@@ -99,12 +98,12 @@ export default withAuth(
     pages: {
       signIn: '/login',
     },
+    secret: process.env.NEXTAUTH_SECRET
   }
 )
 
 export const config = {
   matcher: [
-    // Include all paths, let logic decide inside middleware
     "/((?!_next/static|_next/image|favicon.ico).*)",
   ]
 }
