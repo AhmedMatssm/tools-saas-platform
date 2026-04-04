@@ -1,7 +1,5 @@
 "use client"
 
-export const dynamic = "force-dynamic"
-
 import { useState, useEffect } from "react"
 import { Button } from "@/components/common/button"
 import { Card } from "@/components/common/card"
