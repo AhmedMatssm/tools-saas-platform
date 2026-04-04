@@ -1,4 +1,4 @@
-import { dispatchNotification, dispatchMany } from "../lib/notifications"
+import { dispatchNotification, dispatchMany } from "../services/notifications.service"
 import prisma from "../lib/prisma"
 
 async function testDispatcher() {
