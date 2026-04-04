@@ -13,5 +13,8 @@ logs/
 .gemini/
 playwright-report/
 test-results/
+tests/
+scripts/test-*
+load-test.js
 *.js.map
 *.ts.map
