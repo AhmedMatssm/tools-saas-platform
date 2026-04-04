@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { Button } from "@/components/common/button"
 import { Card } from "@/components/common/card"
 import { Input } from "@/components/common/input"
@@ -14,7 +14,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { useCredits } from "@/hooks/use-credits"
 
-export default function GeneratePage() {
+function GenerateContent() {
   const { data: session, status } = useSession()
   const { credits, isLoading: creditsLoading, refetch: refetchCredits } = useCredits()
   const searchParams = useSearchParams()
@@ -234,5 +234,17 @@ export default function GeneratePage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function GeneratePage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-12 h-12 animate-spin text-primary" />
+      </div>
+    }>
+      <GenerateContent />
+    </Suspense>
   )
 }

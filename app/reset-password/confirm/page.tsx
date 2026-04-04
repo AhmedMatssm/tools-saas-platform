@@ -12,12 +12,12 @@ import {
   Eye, 
   EyeOff 
 } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
 import { useSearchParams, useRouter } from "next/navigation"
 
-export default function ResetPasswordConfirmPage() {
+function ResetPasswordConfirmContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const token = searchParams.get("token")
@@ -197,5 +197,17 @@ export default function ResetPasswordConfirmPage() {
         </Card>
       </motion.div>
     </div>
+  )
+}
+
+export default function ResetPasswordConfirmPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <ShieldCheck className="w-12 h-12 text-blue-500 animate-pulse" />
+      </div>
+    }>
+      <ResetPasswordConfirmContent />
+    </Suspense>
   )
 }

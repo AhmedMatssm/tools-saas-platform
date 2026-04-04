@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { Button } from "@/components/common/button"
 import { Card } from "@/components/common/card"
 import { Sparkles, ArrowRight, User, Mail, Lock } from "lucide-react"
@@ -12,7 +12,7 @@ import { signIn } from "next-auth/react"
 import axios from "axios"
 import Cookies from "js-cookie"
 
-export default function RegisterPage() {
+function RegisterContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [referrerId, setReferrerId] = useState<string | null>(null)
@@ -165,5 +165,17 @@ export default function RegisterPage() {
         </Card>
       </motion.div>
     </div>
+  )
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Sparkles className="w-12 h-12 text-blue-500 animate-pulse" />
+      </div>
+    }>
+      <RegisterContent />
+    </Suspense>
   )
 }
