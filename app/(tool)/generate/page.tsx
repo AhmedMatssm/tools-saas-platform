@@ -2,7 +2,7 @@
 
 export const dynamic = "force-dynamic"
 
-import { useState, useEffect, Suspense } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/common/button"
 import { Card } from "@/components/common/card"
 import { Input } from "@/components/common/input"
@@ -16,7 +16,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { useCredits } from "@/hooks/use-credits"
 
-function GenerateContent() {
+export default function GeneratePage() {
   const { data: session, status } = useSession()
   const { credits, isLoading: creditsLoading, refetch: refetchCredits } = useCredits()
   const searchParams = useSearchParams()
@@ -212,8 +212,8 @@ function GenerateContent() {
            ) : isGenerating ? (
              <div className="w-full aspect-square max-w-2xl bg-secondary/20 rounded-[3rem] animate-pulse flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
-                   <Loader2 className="w-12 h-12 animate-spin text-primary" />
-                   <p className="text-sm font-bold uppercase tracking-widest text-primary">Engaging Astral Engine...</p>
+                  <Loader2 className="w-12 h-12 animate-spin text-primary" />
+                  <p className="text-sm font-bold uppercase tracking-widest text-primary">Engaging Astral Engine...</p>
                 </div>
              </div>
            ) : (
@@ -238,16 +238,3 @@ function GenerateContent() {
     </div>
   )
 }
-
-export default function GeneratePage() {
-  return (
-    <Suspense fallback={
-       <div className="max-w-7xl mx-auto px-6 py-12 flex items-center justify-center min-h-[60vh]">
-          <Loader2 className="w-12 h-12 animate-spin text-primary opacity-20" />
-       </div>
-    }>
-       <GenerateContent />
-    </Suspense>
-  )
-}
-
