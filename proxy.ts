@@ -89,7 +89,7 @@ export default withAuth(
         const isPublic = publicPaths.some(p => 
           p === "/" ? path === "/" : path.startsWith(p)
         )
-        if (isPublic) return true
+        if (isPublic || path.startsWith("/api")) return true
 
         // Everything else requires a valid token
         return !!token
