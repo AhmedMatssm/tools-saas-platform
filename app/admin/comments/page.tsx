@@ -2,6 +2,9 @@ import { revalidatePath } from "next/cache"
 import { Button } from "@/components/common/button"
 import prisma from "@/lib/prisma"
 
+// ── SECURITY: ENSURE PAGE IS DYNAMIC AT RUNTIME ────────────────
+export const dynamic = "force-dynamic"
+
 export default async function AdminCommentsPage() {
   const comments = await (prisma as any).comment.findMany({
     include: {
