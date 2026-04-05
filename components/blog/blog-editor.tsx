@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import axios from "axios"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { filterXSS, getDefaultWhiteList } from "xss"
 
 /* ── Types ──────────────────────────────────────────── */
 type BlogForm = {
@@ -310,7 +311,26 @@ export default function BlogEditor({ initialData, postId }: { initialData?: Part
             {/* Processed Markdown */}
             <div 
               className="prose prose-invert prose-lg max-w-none text-white/90"
-              dangerouslySetInnerHTML={{ __html: renderMarkdown(form.content || "Nothing to preview.") }}
+              dangerouslySetInnerHTML={{ 
+                __html: filterXSS(renderMarkdown(form.content || "Nothing to preview."), {
+                  whiteList: {
+                    ...getDefaultWhiteList(),
+                    span: ["class"],
+                    div: ["class"],
+                    input: ["type", "disabled", "checked", "class"],
+                    blockquote: ["class"],
+                    mark: ["class"],
+                    code: ["class"],
+                    pre: ["class"],
+                    h1: ["class"],
+                    h2: ["class"],
+                    h3: ["class"],
+                    h4: ["class"],
+                    li: ["class"],
+                    hr: ["class"],
+                  }
+                }) 
+              }}
             />
           </div>
         </div>

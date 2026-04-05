@@ -79,9 +79,9 @@ export async function POST(req: NextRequest) {
       return newUser
     })
 
-    return NextResponse.json({ 
-       success: true, 
-       message: "Aura manifestation successful. 10 credits awarded." 
+    return NextResponse.json({
+      success: true,
+      message: "Aura manifestation successful. 10 credits awarded."
     })
 
   } catch (error) {

@@ -5,6 +5,7 @@ import { Clock, Calendar, ChevronLeft, ChevronRight } from "lucide-react"
 import Link from "next/link"
 import ShareButtons from "@/components/blog/share-buttons"
 import BlogInteractions from "@/components/blog/blog-interactions"
+import { filterXSS, getDefaultWhiteList } from "xss"
 
 export const revalidate = 60 // ISR: regenerate page every 60 seconds
 
@@ -168,7 +169,25 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
               {/* Content Card with Shimmer */}
               <div className="shimmer bg-[#151b2d]/40 border border-white/5 rounded-xl p-8 md:p-12 space-y-8 backdrop-blur-md prose prose-invert prose-lg max-w-none prose-p:text-lg prose-p:text-[#dce1fb] prose-p:leading-relaxed mx-auto prose-h2:text-3xl prose-h2:font-black prose-h2:tracking-tight prose-blockquote:border-l-4 prose-blockquote:border-[#8aebff] prose-blockquote:pl-8 prose-blockquote:py-6 prose-blockquote:my-10 prose-blockquote:bg-[#8aebff]/5 prose-blockquote:rounded-r-xl">
-                 <div dangerouslySetInnerHTML={{ __html: renderMarkdown(post.content) }} />
+                 <div dangerouslySetInnerHTML={{ 
+                    __html: filterXSS(renderMarkdown(post.content), {
+                      whiteList: {
+                        ...getDefaultWhiteList(),
+                        span: ["class"],
+                        div: ["class"],
+                        blockquote: ["class"],
+                        mark: ["class"],
+                        code: ["class"],
+                        pre: ["class"],
+                        h1: ["class"],
+                        h2: ["class"],
+                        h3: ["class"],
+                        h4: ["class"],
+                        li: ["class"],
+                        hr: ["class"],
+                      }
+                    }) 
+                 }} />
               </div>
 
               {/* Interactions Component Wrapper */}

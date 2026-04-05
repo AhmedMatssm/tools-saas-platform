@@ -51,7 +51,7 @@ export default withAuth(
        "/contact", "/faq", "/tools", "/api/auth", "/api/account/register",
        "/api/faqs", "/api/blog", "/api/posts", "/api/contact",
        "/api/comments", "/api/stats", "/api/track-visitor",
-       "/reset-password"
+       "/reset-password", "/about", "/privacy", "/terms", "/cookies", "/categories"
     ].some(p => p === "/" ? path === "/" : path.startsWith(p))
 
     const isStatic = path.includes(".") || path.startsWith("/_next")
@@ -65,10 +65,27 @@ export default withAuth(
 
     // ── 3. SECURITY HEADERS ────────────────────────────────
     const response = NextResponse.next()
+    
+    // Core Security Headers (Redundant with next.config.js for safety)
     response.headers.set("X-Frame-Options", "DENY")
     response.headers.set("X-Content-Type-Options", "nosniff")
     response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin")
-    response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+    response.headers.set("X-XSS-Protection", "1; mode=block")
+    
+    // Advanced Isolation Headers
+    response.headers.set("Cross-Origin-Opener-Policy", "same-origin")
+    response.headers.set("Cross-Origin-Embedder-Policy", "require-corp")
+    response.headers.set("Cross-Origin-Resource-Policy", "same-origin")
+    
+    // Permissions Policy
+    response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=(), interest-cohort=()")
+    
+    // Strict CSP (Dynamically managed if needed)
+    response.headers.set(
+      "Content-Security-Policy",
+      "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com https://*.pusher.com; connect-src 'self' https://*.supabase.co https://*.pooler.supabase.com https://*.upstash.io https://*.pusher.com wss://*.pusher.com https://api.astralai.vercel.app; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; frame-src 'self' https://accounts.google.com; object-src 'none'; upgrade-insecure-requests;"
+    )
+
     return response
   },
   {
