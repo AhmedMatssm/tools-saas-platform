@@ -38,28 +38,29 @@ export default withAuth(
       }
     }
 
-    // ── 2. PROTECTED API GUARD ────────────────────────────
-    // Return 401 JSON for unauthenticated API calls
+    // ── 2. GENERAL PROTECTED API GUARD ────────────────────
     const protectedApiPaths = [
-      "/api/generate",
-      "/api/generate-image",
-      "/api/history",
-      "/api/user",
-      "/api/account/settings",
-      "/api/account/billing",
-      "/api/saved",
-      "/api/upload",
-      "/api/notifications",
+      "/api/generate", "/api/generate-image", "/api/history",
+      "/api/user", "/api/account/settings", "/api/account/billing",
+      "/api/saved", "/api/upload", "/api/notifications",
     ]
 
     const isProtectedApi = protectedApiPaths.some(p => path.startsWith(p))
-    const isRegisterApi = path === "/api/account/register"
+    const isPublicPath = [
+       "/", "/login", "/register", "/signup", "/blog", "/pricing",
+       "/contact", "/faq", "/tools", "/api/auth", "/api/account/register",
+       "/api/faqs", "/api/blog", "/api/posts", "/api/contact",
+       "/api/comments", "/api/stats", "/api/track-visitor",
+       "/reset-password"
+    ].some(p => p === "/" ? path === "/" : path.startsWith(p))
 
-    if (isProtectedApi && !isRegisterApi && !token) {
-      return NextResponse.json(
-        { error: "Unauthorized — authentication required" },
-        { status: 401 }
-      )
+    const isStatic = path.includes(".") || path.startsWith("/_next")
+
+    if (!isPublicPath && !isStatic && !token) {
+        if (path.startsWith("/api/")) {
+           return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+        }
+        return NextResponse.redirect(new URL(`/login?callbackUrl=${encodeURIComponent(req.url)}`, req.url))
     }
 
     // ── 3. SECURITY HEADERS ────────────────────────────────
@@ -72,28 +73,7 @@ export default withAuth(
   },
   {
     callbacks: {
-      authorized: ({ req, token }) => {
-        const path = req.nextUrl.pathname
-
-        // Skip auth for static files, robots, sitemap, etc.
-        if (path.includes(".") || path.startsWith("/_next")) return true
-
-        // Allow public pages and auth endpoints through
-        const publicPaths = [
-          "/", "/login", "/register", "/signup", "/blog", "/pricing",
-          "/contact", "/faq", "/tools", "/api/auth", "/api/account/register",
-          "/api/faqs", "/api/blog", "/api/posts", "/api/contact",
-          "/api/comments", "/api/stats", "/api/track-visitor",
-          "/reset-password", "/api/account/reset-password", "/api/chat"
-        ]
-        const isPublic = publicPaths.some(p => 
-          p === "/" ? path === "/" : path.startsWith(p)
-        )
-        if (isPublic || path.startsWith("/api")) return true
-
-        // Everything else requires a valid token
-        return !!token
-      }
+      authorized: () => true // Allow all to pass into proxy function for manual handling
     },
     pages: {
       signIn: '/login',
