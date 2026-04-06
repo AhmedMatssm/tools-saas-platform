@@ -1,26 +1,34 @@
 import { NextRequest, NextResponse } from "next/server"
-import { trackVisitor } from "@/services/analytics.service"
+import { trackVisitorBuffered } from "@/services/analytics.service"
+import redis from "@/lib/redis"
 
 /**
- * POST /api/track-visitor
- * Explicitly track a visitor. Used by middleware or client.
- * Non-blocking by nature (Next.js server-side) but handles errors.
+ * PUBLIC: Track visitor page-view without direct DB impact.
+ * Uses Redis for buffering and sliding-window rate limiting.
  */
 export async function POST(req: NextRequest) {
   try {
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1"
-    const userAgent = req.headers.get("user-agent") || "Unknown"
     const { path } = await req.json()
+    const userAgent = req.headers.get("user-agent") || "Unknown"
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1"
 
-    if (!path) return NextResponse.json({ error: "No path" }, { status: 400 })
+    // ── 0. RATE LIMITING (Sliding Window in Redis) ──
+    const limit = 20 // Max 20 hits per minute
+    const key = `ratelimit:visitor:${ip}`
+    const currentHits = await redis.incr(key)
+    if (currentHits === 1) await redis.expire(key, 60)
 
-    // Async call to ensure response isn't blocked
-    trackVisitor(ip, userAgent, path).catch(err => {
-      console.error("[TRACK_VISITOR_API_CRASH]:", err)
-    })
+    if (currentHits > limit) {
+      return NextResponse.json({ error: "Too many manifestations." }, { status: 429 })
+    }
 
-    return NextResponse.json({ success: true })
-  } catch (err) {
-    return NextResponse.json({ error: "Internal Error" }, { status: 500 })
+    // ── 1. BUFFERED TRACKING ──
+    // Non-blocking: doesn't use Postgres pool
+    trackVisitorBuffered(ip, userAgent, path)
+
+    return NextResponse.json({ success: true, mode: "AURA_BUFFERED" })
+  } catch (error) {
+    // Fail silently on analytics so the main app keeps working
+    return NextResponse.json({ success: false }, { status: 200 })
   }
 }

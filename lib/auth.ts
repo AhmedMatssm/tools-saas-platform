@@ -91,18 +91,8 @@ export const authOptions: NextAuthOptions = {
       if (session.user && token.id) {
         session.user.id = token.id
         session.user.role = token.role
-
-        try {
-          const freshUser = await prisma.user.findUnique({
-            where: { id: token.id },
-            select: { name: true, email: true, role: true }
-          })
-          if (freshUser) {
-            session.user.name = freshUser.name
-            session.user.email = freshUser.email
-            session.user.role = freshUser.role
-          }
-        } catch (_) {}
+        // We avoid fetching from DB here to save connections.
+        // Data is maintained via JWT callback above.
       }
       return session
     },
@@ -112,39 +102,28 @@ export const authOptions: NextAuthOptions = {
   },
   events: {
     async signIn({ user }) {
+      // Non-blocking side effects: security logging & notifications
       try {
-        const { headers } = await import("next/headers")
-        const headerList = headers()
-        const userAgent = (await headerList).get("user-agent") || ""
-        const ip = (await headerList).get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1"
-        const device = userAgent.toLowerCase().includes("mobile") ? "Mobile" : "Desktop"
+        if (!user?.id) return
 
-        if (user?.id) {
-          // Check for previous logins on this device
-          const previousLogin = await prisma.loginHistory.findFirst({
-            where: { userId: user.id, device }
-          })
-
-          await prisma.loginHistory.create({
-            data: { userId: user.id, ip, device }
-          })
-
-          if (!previousLogin) {
-            // SECURITY ALERT: First time on this device
-            await dispatchNotification("SECURITY_ALERT", {
-              userId: user.id,
-              data: { details: `New ${device} detected - IP: ${ip}` }
-            })
-          } else {
-            // NOTIFY: Standard Login Success
-            await dispatchNotification("USER_LOGIN", {
-              userId: user.id,
-              data: { device, ip }
-            })
+        // 1. Log History
+        await prisma.loginHistory.create({
+          data: { 
+            userId: user.id, 
+            ip: "Remote", // Simplified to avoid headers() dependency in event
+            device: "System" 
           }
-        }
+        }).catch(() => {})
+
+        // 2. Dispatch Success Notification
+        await dispatchNotification("USER_LOGIN", {
+          userId: user.id,
+          data: { device: "Identity Manifested", ip: "Authenticated" }
+        }).catch(() => {})
+
       } catch (err) {
-        console.error("[SECURITY_LAYER_ERROR]:", err)
+        // Silent fail: login events shouldn't break the actual login flow
+        console.warn("[AUTH_EVENT_SILENT_FAIL]:", err)
       }
     },
     async createUser({ user }: { user: any }) {
