@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma"
-import { notificationQueue } from "@/lib/bullmq"
+// BullMQ is deprecated for Vercel Serverless. Direct triggers or QStash are used instead.
 import { pusherServer } from "@/lib/pusher"
 
 /**
@@ -125,8 +125,8 @@ export async function dispatchNotification(event: NotificationEvent, payload: Ev
   const { userId, data, metadata } = payload
   const { title, message, type } = resolveTemplate(event, data)
 
-  // Enqueue via standard queue logic
-  return await notifyUser({
+  // Direct create in serverless environment
+  return await createNotificationSync({
     userId,
     title,
     message,
@@ -138,37 +138,35 @@ export async function dispatchNotification(event: NotificationEvent, payload: Ev
 
 /**
  * Batch Dispatcher: Sends the same event to multiple users.
- * Ideal for broadcasts, updates, or team-wide alerts.
  */
 export async function dispatchMany(userIds: string[], event: NotificationEvent, sharedData?: Record<string, any>) {
   const { title, message, type } = resolveTemplate(event, sharedData)
   
-  const jobs = userIds.map((userId) => ({
-    name: "process-notification",
-    data: {
-      userId,
-      title,
-      message,
-      type,
-      metadata: { ...sharedData, eventType: event }
-    },
-  }))
-  
-  await notificationQueue.addBulk(jobs)
+  // In serverless, we process in small batches to stay within DB connection limits.
+  const BATCH_SIZE = 5
+  for (let i = 0; i < userIds.length; i += BATCH_SIZE) {
+    const chunk = userIds.slice(i, i + BATCH_SIZE)
+    const promises = chunk.map((userId) => 
+      createNotificationSync({
+        userId,
+        title,
+        message,
+        type,
+        metadata: { ...sharedData, eventType: event }
+      })
+    )
+    await Promise.allSettled(promises)
+  }
 }
 
-
 /**
- * Enqueue notification creation as a background job for maximum performance.
+ * PRODUCTION-READY: Dispatches notification directly in serverless.
  */
 export async function notifyUser(params: CreateNotificationParams) {
   try {
-    // We enqueue the creation task to ensure the request is non-blocking.
-    await notificationQueue.add("process-notification", params)
-    return { success: true }
+    return await createNotificationSync(params)
   } catch (error) {
-    console.error("[NOTIFICATION_QUEUE_ERROR]:", error)
-    // Fallback: create directly if queue fails (optional, based on priority)
+    console.error("[NOTIFICATION_DISPATCH_ERROR]:", error)
     return { success: false, error }
   }
 }
@@ -177,11 +175,8 @@ export async function notifyUser(params: CreateNotificationParams) {
  * Bulk notification helper
  */
 export async function notifyMany(userIds: string[], params: Omit<CreateNotificationParams, "userId">) {
-  const jobs = userIds.map((userId) => ({
-    name: "process-notification",
-    data: { ...params, userId },
-  }))
-  await notificationQueue.addBulk(jobs)
+  const promises = userIds.map((userId) => createNotificationSync({ ...params, userId }))
+  await Promise.allSettled(promises)
 }
 
 /**
