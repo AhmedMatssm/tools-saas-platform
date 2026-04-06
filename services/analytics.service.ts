@@ -88,43 +88,11 @@ export async function syncRedisAnalyticsToDB() {
         console.error("[ANALYTICS_SYNC_ITEM_ERROR]:", err)
       }
     }
-    // 3. Process Blog Views (Hash)
-    const viewMap = await redis.hgetall("analytics:blog_views")
-    const slugs = Object.keys(viewMap)
-
-    for (const slug of slugs) {
-      const increment = parseInt(viewMap[slug])
-      if (increment > 0) {
-        try {
-          await (prisma as any).blog.update({
-            where: { slug },
-            data: { views: { increment } }
-          })
-          // Remove from Redis after successful sync
-          await redis.hdel("analytics:blog_views", slug)
-          processedCount++
-        } catch (err) {
-          console.error(`[BLOG_SYNC_FAIL] Slug: ${slug}`, err)
-        }
-      }
-    }
-
   } catch (error) {
     console.error("[ANALYTICS_SYNC_GLOBAL_ERROR]:", error)
   }
 
   return processedCount
-}
-
-/**
- * BUFFERED: Increments blog view counts via Redis to save DB connections.
- */
-export async function bufferBlogView(slug: string) {
-  try {
-    await redis.hincrby("analytics:blog_views", slug, 1)
-  } catch (error) {
-    console.error("[BLOG_VIEW_BUFFER_ERROR]:", error)
-  }
 }
 
 /**

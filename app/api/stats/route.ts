@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 
-// Cache stats for 1 hour to reduce DB pressure
-export const revalidate = 3600
+export const dynamic = "force-dynamic"
 
 export async function GET() {
   try {
