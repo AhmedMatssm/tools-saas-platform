@@ -41,8 +41,16 @@ export default function BlogPage() {
     }
   }
 
+  // Debounced search to prevent DB flooding
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPage(1)
+      fetchBlogs()
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [search])
+
   useEffect(() => { fetchBlogs() }, [page, activeCategory])
-  useEffect(() => { if (page === 1) fetchBlogs(); else setPage(1) }, [search])
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-16 space-y-20">

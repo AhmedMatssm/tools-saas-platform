@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 
-export const dynamic = "force-dynamic"
+// Cache FAQs for 12 hours
+export const revalidate = 43200
 
 export async function GET(req: Request) {
   try {

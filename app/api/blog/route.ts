@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 
+// Revalidate public blog listing every 5 minutes
+export const revalidate = 300 
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
@@ -12,12 +15,14 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "9")
     const skip = (page - 1) * limit
 
-    // Single post by slug + increment view count
+    // Single post by slug + increment view count via Redis Buffer
     if (slug) {
       const post = await (prisma as any).blog.findUnique({ where: { slug, published: true } })
       if (!post) return NextResponse.json({ error: "Not found" }, { status: 404 })
-      // Fire-and-forget view increment
-      ;(prisma as any).blog.update({ where: { slug }, data: { views: { increment: 1 } } }).catch(() => {})
+
+      const { bufferBlogView } = await import("@/services/analytics.service")
+      bufferBlogView(slug)
+
       return NextResponse.json({ success: true, post })
     }
 
