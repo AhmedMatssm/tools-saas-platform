@@ -8,6 +8,7 @@ import { cn } from "@/utils";
 import { Providers } from "@/components/layout/providers";
 import { Chatbot } from "@/components/layout/chatbot";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -37,6 +38,7 @@ export default function RootLayout({
           <CookieConsent />
           <Chatbot />
           <SpeedInsights />
+          <Analytics />
         </Providers>
       </body>
     </html>
