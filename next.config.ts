@@ -57,8 +57,8 @@ const nextConfig: NextConfig = {
         source: "/api/:path*",
         headers: [
           { key: "Access-Control-Allow-Credentials", value: "true" },
-          { key: "Access-Control-Allow-Origin", value: "*" }, // Repleace '*' with your production URL for maximum security
-          { key: "Access-Control-Allow-Methods", value: "GET,DELETE,PATCH,POST,PUT" },
+          { key: "Access-Control-Allow-Origin", value: process.env.NEXT_PUBLIC_APP_URL || "https://astralai-seven.vercel.app" },
+          { key: "Access-Control-Allow-Methods", value: "GET,POST,PUT,DELETE,OPTIONS" },
           { key: "Access-Control-Allow-Headers", value: "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version" },
         ]
       },
@@ -68,7 +68,7 @@ const nextConfig: NextConfig = {
          headers: [
            {
              key: "Content-Security-Policy",
-             value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com; connect-src 'self' https://*.supabase.co https://*.pooler.supabase.com https://api.astralai.vercel.app; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; frame-src 'self' https://accounts.google.com; object-src 'none'; upgrade-insecure-requests;",
+             value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; font-src 'self' https:; connect-src 'self' https:; frame-ancestors 'none'; frame-src 'self' https://accounts.google.com; object-src 'none'; upgrade-insecure-requests;",
            }
          ]
       }

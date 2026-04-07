@@ -16,7 +16,13 @@ export default withAuth(
 
     // ── 1. ADMIN GUARD ────────────────────────────────────
     if (path.startsWith("/admin") || path.startsWith("/api/admin")) {
-      if (!token || token.role !== "ADMIN") {
+      if (!token) {
+        if (path.startsWith("/api/")) {
+          return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+        }
+        return NextResponse.redirect(new URL(`/login?callbackUrl=${encodeURIComponent(req.url)}`, req.url))
+      }
+      if (token.role !== "ADMIN") {
         console.warn(`[SECURITY] Unauthorized admin access attempt: ${path}`)
         if (path.startsWith("/api/")) {
           return NextResponse.json({ error: "Forbidden" }, { status: 403 })
@@ -70,7 +76,7 @@ export default withAuth(
     // Strict CSP (Dynamically managed if needed)
     response.headers.set(
       "Content-Security-Policy",
-      "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com; connect-src 'self' https://*.supabase.co https://*.pooler.supabase.com https://api.astralai.vercel.app; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; frame-src 'self' https://accounts.google.com; object-src 'none'; upgrade-insecure-requests;"
+      "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; font-src 'self' https:; connect-src 'self' https:; frame-ancestors 'none'; frame-src 'self' https://accounts.google.com; object-src 'none'; upgrade-insecure-requests;"
     )
 
     return response
