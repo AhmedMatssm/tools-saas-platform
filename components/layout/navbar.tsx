@@ -50,8 +50,14 @@ export function Navbar() {
     setIsOpen(false)
   }, [pathname])
 
+  const userRole = (session?.user as any)?.role
   const navLinks = [
     { name: "Home", href: "/", icon: Home },
+    ...(session ? [{ 
+      name: userRole === "ADMIN" ? "Admin" : "Dashboard", 
+      href: userRole === "ADMIN" ? "/admin" : "/dashboard", 
+      icon: LayoutDashboard 
+    }] : []),
     { name: "About", href: "/about", icon: Info },
     { name: "Blogs", href: "/blog", icon: FileText },
     { name: "Tools", href: "/tools", icon: Wrench },
@@ -60,7 +66,6 @@ export function Navbar() {
   ]
 
   // Context-aware profile dropdown links
-  const userRole = (session?.user as any)?.role
   const profileLinks = [
     {
       name: userRole === "ADMIN" ? "Admin Control" : "Dashboard",
@@ -226,9 +231,22 @@ export function Navbar() {
                   </Button>
                 </div>
               ) : (
-                <Button onClick={() => signOut()} variant="outline" className="w-full justify-center rounded-xl h-12 text-xs font-black uppercase tracking-widest text-red-400 border-red-400/20">
-                  <LogOut className="w-4 h-4 mr-2" /> Sign Out
-                </Button>
+                <div className="flex flex-col gap-4">
+                  {profileLinks.map((link) => (
+                    <Link
+                      key={link.name}
+                      href={link.href}
+                      className="flex items-center gap-4 text-sm font-black uppercase tracking-widest text-muted-foreground"
+                    >
+                      <link.icon className="w-5 h-5 text-primary" />
+                      {link.name}
+                    </Link>
+                  ))}
+                  <div className="h-px bg-white/5 my-2" />
+                  <Button onClick={() => signOut()} variant="outline" className="w-full justify-center rounded-xl h-12 text-xs font-black uppercase tracking-widest text-red-400 border-red-400/20">
+                    <LogOut className="w-4 h-4 mr-2" /> Sign Out
+                  </Button>
+                </div>
               )}
             </div>
           </motion.div>
