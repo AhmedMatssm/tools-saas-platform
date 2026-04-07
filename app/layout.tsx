@@ -7,6 +7,7 @@ import { CookieConsent } from "@/components/layout/cookie-consent";
 import { cn } from "@/utils";
 import { Providers } from "@/components/layout/providers";
 import { Chatbot } from "@/components/layout/chatbot";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -35,6 +36,7 @@ export default function RootLayout({
           <Footer />
           <CookieConsent />
           <Chatbot />
+          <SpeedInsights />
         </Providers>
       </body>
     </html>
