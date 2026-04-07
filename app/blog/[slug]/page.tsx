@@ -85,12 +85,6 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   // Verify post exists
   if (!post) notFound()
 
-  // Track view asynchronously (valid in Next.js Server Components if we don't await the result within the critical render path)
-  ;(prisma as any).blog.update({
-    where: { id: post.id },
-    data: { views: { increment: 1 } }
-  }).catch(() => {})
-
   // Fetch Related Posts
   const relatedPosts = await (prisma as any).blog.findMany({
     where: { published: true, id: { not: post.id } },

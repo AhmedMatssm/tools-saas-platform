@@ -39,10 +39,7 @@ model User {
   likes            PostLike[]
   savedImages      SavedImage[]
   savedPosts       SavedPost[]
-  usage            Usage?
   creditHistory    CreditHistory[]
-  notifications    Notification[]
-  notificationSettings NotificationSettings?
 
   @@map("users")
 }
@@ -140,7 +137,6 @@ model Blog {
   readTime    Int       @default(0)
   scheduledAt DateTime?
   tags        String[]
-  views       Int       @default(0)
   comments    Comment[]
   likes       PostLike[]
   savedPosts  SavedPost[]
@@ -183,12 +179,6 @@ model UserQuestion {
   helpful    Boolean?
 }
 
-model Usage {
-  id     String @id @default(cuid())
-  count  Int    @default(0)
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
 
 model PostLike {
   id        String   @id @default(cuid())
@@ -258,57 +248,5 @@ model CreditHistory {
   @@index([type])
 }
 
-model Visitor {
-  id          String     @id @default(cuid())
-  ipHash      String
-  userAgent   String?
-  createdAt   DateTime   @default(now())
-  pageViews   PageView[]
 
-  @@index([ipHash])
-  @@index([createdAt])
-}
-
-model PageView {
-  id        String   @id @default(cuid())
-  visitorId String
-  path      String
-  createdAt DateTime @default(now())
-  visitor   Visitor  @relation(fields: [visitorId], references: [id], onDelete: Cascade)
-
-  @@index([visitorId])
-  @@index([createdAt])
-  @@index([path])
-}
-
-model Notification {
-  id        String   @id @default(cuid())
-  userId    String
-  title     String
-  message   String
-  type      String   // INFO, SUCCESS, WARNING, ERROR, CREDIT, SYSTEM
-  isRead    Boolean  @default(false)
-  metadata  Json?
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([createdAt])
-  @@index([isRead])
-}
-
-model NotificationSettings {
-  id               String   @id @default(cuid())
-  userId           String   @unique
-  inAppEnabled     Boolean  @default(true)
-  emailEnabled     Boolean  @default(true)
-  successEnabled   Boolean  @default(true)
-  errorEnabled     Boolean  @default(true)
-  warningEnabled   Boolean  @default(true)
-  creditEnabled    Boolean  @default(true)
-  systemEnabled    Boolean  @default(true)
-  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-}
 

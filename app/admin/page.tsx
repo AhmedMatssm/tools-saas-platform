@@ -1,48 +1,15 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { Card } from "@/components/common/card"
 import { Button } from "@/components/common/button"
-import { AreaChart, Users, Zap, FileText, Activity, ArrowUpRight, TrendingUp, Monitor, Shield, MessageCircle, ThumbsUp, Bookmark } from "lucide-react"
-import axios from "axios"
 import { motion } from "framer-motion"
-import { AnalyticsCharts } from "@/components/admin/analytics-charts"
+import { Shield, FileText, Users, ArrowUpRight } from "lucide-react"
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState<any>(null)
-  const [recent, setRecent] = useState<any[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    fetchStats()
-  }, [])
-
-  const fetchStats = async () => {
-    try {
-      const resp = await axios.get("/api/admin/stats")
-      if (resp.data.success) {
-        setStats(resp.data.stats)
-        setRecent(resp.data.recentGenerations || [])
-      }
-    } catch (error) {
-      console.error("ADMIN_STATS:", error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  const recent: any[] = []
+  const isLoading = false
 
   if (isLoading) return <div className="p-20 text-center font-black animate-pulse uppercase tracking-[0.5em] text-primary">Engaging Admin Aura...</div>
-
-  const statCards = [
-    { label: "Total Visitors", value: stats?.totalVisitors || 0, icon: Monitor, color: "blue", trend: "Live" },
-    { label: "Today Hits", value: stats?.todayVisitors || 0, icon: Activity, color: "emerald", trend: "Today" },
-    { label: "Total Users", value: stats?.totalUsers || 0, icon: Users, color: "blue", trend: "+12%" },
-    { label: "Manifestations", value: stats?.totalGenerations || 0, icon: Zap, color: "purple", trend: "+24%" },
-    { label: "Blog Posts", value: stats?.totalBlogs || 0, icon: FileText, color: "indigo", trend: "+0%" },
-    { label: "Comments", value: stats?.totalComments || 0, icon: MessageCircle, color: "green", trend: "+45%" },
-    { label: "Post Likes", value: stats?.totalLikes || 0, icon: ThumbsUp, color: "teal", trend: "+80%" },
-    { label: "Saved Posts", value: stats?.totalSaved || 0, icon: Bookmark, color: "orange", trend: "+15%" },
-  ]
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-12 space-y-12">
@@ -61,44 +28,7 @@ export default function AdminDashboard() {
            <a href="/admin/users">
              <Button variant="outline" className="rounded-xl px-6 h-12 gap-2 text-xs font-black uppercase tracking-widest">Users <Users className="w-4 h-4" /></Button>
            </a>
-           <a href="/admin/loves">
-             <Button variant="outline" className="rounded-xl px-6 h-12 gap-2 text-xs font-black uppercase tracking-widest border-red-500/30 text-red-500 hover:bg-red-500/10">Loves <ThumbsUp className="w-4 h-4" /></Button>
-           </a>
-           <Button onClick={fetchStats} variant="outline" className="rounded-xl px-6 h-12 gap-2 text-xs font-black uppercase tracking-widest">Refresh <Activity className="w-4 h-4" /></Button>
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-         {statCards.map((s, idx) => (
-           <motion.div
-             key={s.label}
-             initial={{ opacity: 0, y: 20 }}
-             animate={{ opacity: 1, y: 0 }}
-             transition={{ duration: 0.5, delay: idx * 0.1 }}
-           >
-             <Card className="p-10 rounded-[3rem] border-border/50 bg-card/40 backdrop-blur-xl hover:border-primary/40 transition-all shadow-2xl relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-                   <s.icon className="w-24 h-24" />
-                </div>
-                <div className="space-y-6">
-                   <div className="flex items-center justify-between">
-                      <div className={`p-4 rounded-2xl bg-primary/10 text-primary`}>
-                        <s.icon className="w-6 h-6" />
-                      </div>
-                      <span className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-1"><TrendingUp className="w-3 h-3" /> {s.trend}</span>
-                   </div>
-                   <div className="space-y-2">
-                     <p className="text-sm font-bold uppercase tracking-[0.2em] text-muted-foreground">{s.label}</p>
-                     <h3 className="text-4xl font-black tracking-tighter">{s.value}</h3>
-                   </div>
-                </div>
-             </Card>
-           </motion.div>
-         ))}
-      </div>
-
-      <div className="w-full">
-         <AnalyticsCharts />
       </div>
 
       <div className="grid lg:grid-cols-12 gap-10">

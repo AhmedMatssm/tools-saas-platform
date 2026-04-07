@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
-import { dispatchNotification } from "@/services/notifications.service"
 import { z } from "zod"
 import crypto from "crypto"
 
@@ -37,14 +36,8 @@ export async function POST(req: Request) {
     })
 
 
-    // DISPATCH: Password Reset Notification (In-App + Email)
-    await dispatchNotification("PASSWORD_RESET", {
-      userId: user.id,
-      data: { 
-        token,
-        resetUrl: `${process.env.NEXTAUTH_URL}/reset-password/confirm?token=${token}`
-      }
-    })
+    // TODO: Use a dedicated email provider (Resend, SendGrid) to send this link now that the notification system is removed
+    console.log(`[PASS_RESET_REMOVED]: Link for ${email}: ${process.env.NEXTAUTH_URL}/reset-password/confirm?token=${token}`)
 
     return NextResponse.json({ success: true })
   } catch (error) {

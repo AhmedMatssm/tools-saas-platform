@@ -7,7 +7,7 @@ import { Button } from "@/components/common/button"
 import { Card } from "@/components/common/card"
 import Link from "next/link"
 import {
-  User, Shield, Bell, CreditCard,
+  User, Shield, CreditCard,
   LogOut, Loader2, Check, X, Eye, EyeOff,
   Lock, Zap, AlertTriangle, Settings, Copy, Monitor, Calendar, History, ArrowRight
 } from "lucide-react"
@@ -15,7 +15,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import axios from "axios"
 
 /* ─── Types ─────────────────────────────────────────────── */
-type Tab = "account" | "password" | "billing" | "security" | "notifications"
+type Tab = "account" | "password" | "billing" | "security"
 
 /* ─── Toast helper ───────────────────────────────────────── */
 function useToast() {
@@ -77,14 +77,6 @@ export default function SettingsPage() {
   const [showPwd, setShowPwd] = useState(false)
   const [isSavingPwd, setIsSavingPwd] = useState(false)
 
-  /* notifications & prefs */
-  const [notifs, setNotifs] = useState({
-    marketing: false,
-    security: true,
-    updates: true,
-    digest: false,
-  })
-
   useEffect(() => {
     if (session?.user?.name) setName(session.user.name)
   }, [session])
@@ -94,9 +86,6 @@ export default function SettingsPage() {
       try {
         const res = await axios.get("/api/user/settings")
         setUserConfig(res.data.data)
-        if(res.data.data.emailAlerts !== undefined) {
-           setNotifs(n => ({...n, updates: res.data.data.emailAlerts}))
-        }
       } catch (e) {
         console.error("Failed to fetch settings config")
       } finally {
@@ -188,21 +177,12 @@ export default function SettingsPage() {
      }
   }
 
-  /* ── Preferences ──────────────────────────────────────── */
-  const toggleNotificationPref = async (key: string, value: boolean) => {
-     setNotifs(n => ({ ...n, [key]: value }))
-     if(key === "updates") {
-        try { await runAction("UPDATE_PREFS", { emailAlerts: value }) } catch(e) {}
-     }
-  }
-
   /* ── Tabs config ──────────────────────────────────────── */
   const tabs: { id: Tab; label: string; icon: any }[] = [
     { id: "account", label: "Account", icon: User },
     { id: "password", label: "Password", icon: Lock },
     { id: "billing", label: "Billing & Credits", icon: CreditCard },
     { id: "security", label: "Security & API", icon: Shield },
-    { id: "notifications", label: "Preferences", icon: Bell },
   ]
 
   const pwdStrength = newPwd.length === 0 ? 0 : newPwd.length < 6 ? 1 : newPwd.length < 10 ? 2 : /[A-Z]/.test(newPwd) && /[0-9]/.test(newPwd) ? 4 : 3
@@ -556,33 +536,10 @@ export default function SettingsPage() {
                 </Section>
               </motion.div>
             )}
-
-
-            {/* ─ NOTIFICATIONS ─ */}
-            {activeTab === "notifications" && (
-              <motion.div key="notifications" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }}>
-                    <div className="p-8 rounded-2xl border border-indigo-500/20 bg-indigo-500/[0.03] space-y-6 text-center">
-                      <div className="w-16 h-16 bg-indigo-500/10 rounded-2xl flex items-center justify-center mx-auto text-indigo-500">
-                        <Bell className="w-8 h-8" />
-                      </div>
-                      <div className="space-y-2">
-                        <h3 className="text-xl font-black">Configure Your Aura Alerts</h3>
-                        <p className="text-xs text-muted-foreground max-w-sm mx-auto leading-relaxed uppercase tracking-widest font-bold">
-                          Manage delivery channels (In-App/Email) and fine-tune notifications for credits, security, and system updates.
-                        </p>
-                      </div>
-                      <Link href="/dashboard/settings/notifications">
-                        <Button variant="premium" className="rounded-xl px-10 h-12 text-xs font-black uppercase tracking-widest gap-2 shadow-lg">
-                          Manage Notifications <ArrowRight className="w-4 h-4" />
-                        </Button>
-                      </Link>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            )}
-           </main>
-      </div>
+          </AnimatePresence>
+        )}
+      </main>
     </div>
+  </div>
   )
 }

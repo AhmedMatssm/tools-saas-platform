@@ -16,7 +16,6 @@ import {
   History,
   Zap,
   ChevronDown,
-  Bell,
   Search,
   MessageSquare,
   CreditCard,
@@ -31,7 +30,6 @@ import {
 import { Button } from "@/components/common/button"
 import { useSession, signOut } from "next-auth/react"
 import { useCredits } from "@/hooks/use-credits"
-import NotificationBell from "@/components/layout/NotificationBell"
 
 export function Navbar() {
   const pathname = usePathname()
@@ -118,8 +116,6 @@ export function Navbar() {
                 </div>
               </Link>
 
-              {/* Notifications */}
-              <NotificationBell />
 
               {/* Profile Dropdown */}
               <div className="relative">

@@ -40,20 +40,8 @@ export async function POST(req: NextRequest) {
         }
       })
 
-      // NEW: Initialize Notification Settings
-      await tx.notificationSettings.create({
-        data: { userId: newUser.id }
-      })
-
-      // NEW: Log initial credits for new user (this also sends a notification via logCreditChange)
+      // Log initial credits for new user
       await logCreditChange(tx, newUser.id, 10, "REFILL", "Welcome Bonus - Initial Aura Manifested")
-
-      // 1b. Send a general welcome notification (Different from the credit one)
-      const { dispatchNotification } = await import("@/services/notifications.service")
-      await dispatchNotification("USER_SIGNUP", {
-        userId: newUser.id,
-        data: { name }
-      })
 
       // 2. If valid referrerId, reward the friend (+5 credits)
       if (referrerId) {

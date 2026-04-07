@@ -12,12 +12,10 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "9")
     const skip = (page - 1) * limit
 
-    // Single post by slug + increment view count
+    // Single post by slug
     if (slug) {
       const post = await (prisma as any).blog.findUnique({ where: { slug, published: true } })
       if (!post) return NextResponse.json({ error: "Not found" }, { status: 404 })
-      // Fire-and-forget view increment
-      ;(prisma as any).blog.update({ where: { slug }, data: { views: { increment: 1 } } }).catch(() => {})
       return NextResponse.json({ success: true, post })
     }
 
@@ -41,7 +39,7 @@ export async function GET(req: NextRequest) {
         orderBy: { createdAt: "desc" },
         select: {
           id: true, title: true, slug: true, excerpt: true, image: true,
-          category: true, tags: true, readTime: true, views: true,
+          category: true, tags: true, readTime: true,
           published: true, createdAt: true,
         }
       })

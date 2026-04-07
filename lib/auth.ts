@@ -27,7 +27,6 @@ declare module "next-auth/jwt" {
   }
 }
 
-import { dispatchNotification } from "@/services/notifications.service"
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -115,11 +114,7 @@ export const authOptions: NextAuthOptions = {
           }
         }).catch(() => {})
 
-        // 2. Dispatch Success Notification
-        await dispatchNotification("USER_LOGIN", {
-          userId: user.id,
-          data: { device: "Identity Manifested", ip: "Authenticated" }
-        }).catch(() => {})
+        // 2. Dispatch Success Notification (REMOVED)
 
       } catch (err) {
         // Silent fail: login events shouldn't break the actual login flow
@@ -132,18 +127,8 @@ export const authOptions: NextAuthOptions = {
         const cookieStore = cookies()
         const referrerId = (await cookieStore).get("astral_ref_id")?.value
 
-        // Initialize Notification Settings
-        await prisma.notificationSettings.upsert({
-          where: { userId: user.id },
-          update: {},
-          create: { userId: user.id }
-        })
-
-        // Dispatch Welcome Notification
-        await dispatchNotification("USER_SIGNUP", {
-          userId: user.id,
-          data: { name: user.name }
-        })
+        // Initialize Notification Settings (REMOVED)
+        // Dispatch Welcome Notification (REMOVED)
 
         if (referrerId && user.id) {
           // Referral Reward

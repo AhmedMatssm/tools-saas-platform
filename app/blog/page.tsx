@@ -3,14 +3,14 @@
 import { useState, useEffect } from "react"
 import { Card } from "@/components/common/card"
 import { Button } from "@/components/common/button"
-import { Search, Tag, Clock, TrendingUp, ArrowRight, BookOpen, ChevronLeft, ChevronRight, Filter } from "lucide-react"
+import { Search, Tag, Clock, ArrowRight, BookOpen, ChevronLeft, ChevronRight, Filter } from "lucide-react"
 import { motion } from "framer-motion"
 import Link from "next/link"
 import axios from "axios"
 
 type Blog = {
   id: string; title: string; slug: string; excerpt: string; image?: string
-  category: string; tags: string[]; readTime: number; views: number; createdAt: string
+  category: string; tags: string[]; readTime: number; createdAt: string
 }
 
 export default function BlogPage() {
@@ -124,8 +124,6 @@ export default function BlogPage() {
                   <div className="flex-1 p-8 space-y-5 flex flex-col">
                     <div className="flex items-center gap-3 text-[10px] text-muted-foreground font-black uppercase tracking-widest">
                       <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {blog.readTime} min</span>
-                      <span className="w-1 h-1 rounded-full bg-muted-foreground" />
-                      <span className="flex items-center gap-1"><TrendingUp className="w-3 h-3" /> {blog.views}</span>
                       <span className="w-1 h-1 rounded-full bg-muted-foreground" />
                       <span>{new Date(blog.createdAt).toLocaleDateString()}</span>
                     </div>

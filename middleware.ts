@@ -12,20 +12,7 @@ export default withAuth(
     const path = req.nextUrl.pathname
     const token = req.nextauth.token
 
-    // ── 0. VISITOR TRACKING (Non-blocking) ────────────────
-    // Track every page view, excluding internal API/assets
-    if (!path.includes(".") && !path.startsWith("/api") && !path.startsWith("/_next")) {
-      const origin = req.nextUrl.origin
-      fetch(`${origin}/api/track-visitor`, {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "user-agent": req.headers.get("user-agent") || "Unknown",
-          "x-forwarded-for": req.headers.get("x-forwarded-for") || "127.0.0.1"
-        },
-        body: JSON.stringify({ path })
-      }).catch(err => console.error("[PROXY_TRACKING_ERROR]:", err))
-    }
+    // ── 0. VISITOR TRACKING (DECOMMISSIONED) ──────────────
 
     // ── 1. ADMIN GUARD ────────────────────────────────────
     if (path.startsWith("/admin") || path.startsWith("/api/admin")) {
@@ -42,7 +29,7 @@ export default withAuth(
     const protectedApiPaths = [
       "/api/generate", "/api/generate-image", "/api/history",
       "/api/user", "/api/account/settings", "/api/account/billing",
-      "/api/saved", "/api/upload", "/api/notifications",
+      "/api/saved", "/api/upload",
     ]
 
     const isProtectedApi = protectedApiPaths.some(p => path.startsWith(p))
@@ -50,7 +37,7 @@ export default withAuth(
        "/", "/login", "/register", "/signup", "/blog", "/pricing",
        "/contact", "/faq", "/tools", "/api/auth", "/api/account/register",
        "/api/faqs", "/api/blog", "/api/posts", "/api/contact",
-       "/api/comments", "/api/stats", "/api/track-visitor",
+       "/api/comments",
        "/reset-password", "/about", "/privacy", "/terms", "/cookies", "/categories"
     ].some(p => p === "/" ? path === "/" : path.startsWith(p))
 
@@ -83,7 +70,7 @@ export default withAuth(
     // Strict CSP (Dynamically managed if needed)
     response.headers.set(
       "Content-Security-Policy",
-      "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com https://*.pusher.com; connect-src 'self' https://*.supabase.co https://*.pooler.supabase.com https://*.upstash.io https://*.pusher.com wss://*.pusher.com https://api.astralai.vercel.app; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; frame-src 'self' https://accounts.google.com; object-src 'none'; upgrade-insecure-requests;"
+      "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com; connect-src 'self' https://*.supabase.co https://*.pooler.supabase.com https://api.astralai.vercel.app; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; frame-src 'self' https://accounts.google.com; object-src 'none'; upgrade-insecure-requests;"
     )
 
     return response
