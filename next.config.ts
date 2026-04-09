@@ -1,4 +1,6 @@
-const nextConfig = {
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
   // 1. Security: Disable X-Powered-By header
   poweredByHeader: false,
   
@@ -75,13 +77,6 @@ const nextConfig = {
 
   turbopack: {
     root: "./"
-  },
-  
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    ignoreBuildErrors: true,
   }
 };
 

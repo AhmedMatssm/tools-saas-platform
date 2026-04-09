@@ -12,7 +12,8 @@ import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({ subsets: ["latin"] });
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://astryxo.com';
+const RAW_APP_URL = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL || 'astryxo.com';
+const APP_URL = RAW_APP_URL.startsWith('http') ? RAW_APP_URL : `https://${RAW_APP_URL}`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
