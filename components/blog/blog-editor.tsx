@@ -106,14 +106,14 @@ export default function BlogEditor({ initialData, postId }: { initialData?: Part
     if (file.size > 2 * 1024 * 1024) { fire("Image exceeds 2MB", false); return null }
     
     try {
-      const fd = new FormData()
-      fd.append("file", file)
-      const resp = await axios.post("/api/upload", fd)
-      if (resp.data.success) {
-        return resp.data.url
-      }
-    } catch {
-      fire("Image upload failed", false)
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    } catch (e: any) {
+      fire(e.message || "Image processing failed", false)
     }
     return null
   }
@@ -191,13 +191,21 @@ export default function BlogEditor({ initialData, postId }: { initialData?: Part
         
         {/* Workspace Center (Editor & Preview) */}
         <div className="flex-1 flex gap-6 overflow-hidden">
-          {/* Advanced Tiptap Editor */}
-          <div className={`flex-1 transition-all duration-300 ${viewMode === "preview" ? "hidden" : "flex"}`}>
-            <TiptapEditor 
-              content={form.content} 
-              onChange={(html) => set("content", html)} 
-              onUploadImage={handleEditorImageUpload} 
+          {/* Advanced Editor Pane */}
+          <div className={`flex-1 flex flex-col gap-4 transition-all duration-300 ${viewMode === "preview" ? "hidden" : "flex"}`}>
+            <input 
+              value={form.title} 
+              onChange={e => set("title", e.target.value)} 
+              placeholder="Post Title..." 
+              className="text-4xl md:text-5xl font-black bg-transparent border-none outline-none text-white tracking-tighter placeholder:text-white/20 w-full"
             />
+            <div className="flex-1 bg-background/50 border border-white/5 rounded-2xl overflow-hidden relative">
+              <TiptapEditor 
+                content={form.content} 
+                onChange={(html) => set("content", html)} 
+                onUploadImage={handleEditorImageUpload} 
+              />
+            </div>
           </div>
 
           {/* Clean Client HTML Preview */}
