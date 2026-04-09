@@ -15,8 +15,8 @@ export async function GET(req: Request) {
     }
 
     const [total, images] = await Promise.all([
-      (prisma as any).generation.count({ where }),
-      (prisma as any).generation.findMany({
+      prisma.generation.count({ where }),
+      prisma.generation.findMany({
         where,
         take: limit,
         skip,
