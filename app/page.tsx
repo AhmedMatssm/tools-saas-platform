@@ -10,6 +10,7 @@ import {
 } from "lucide-react"
 import { motion, useInView } from "framer-motion"
 import Link from "next/link"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import axios from "axios"
 import { CommunityShowcase } from "@/components/layout/community-showcase"
@@ -168,7 +169,8 @@ export default function LandingPage() {
     <div className="w-full bg-background selection:bg-primary/20">
 
       {/* ── 1. HERO ─────────────────────────────────────── */}
-      <section className="relative pt-40 pb-24 overflow-hidden px-6">
+      <main>
+        <section className="relative pt-40 pb-24 overflow-hidden px-6" aria-label="Hero Section">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[800px] bg-[radial-gradient(circle_at_top,rgba(163,100,255,0.10)_0%,transparent_70%)] -z-10" />
         <div className="max-w-7xl mx-auto text-center">
 
@@ -178,23 +180,22 @@ export default function LandingPage() {
             <span className="w-2 h-2 rounded-full bg-secondary shadow-[0_0_8px_theme(colors.secondary)]" />
             <span className="text-xs font-medium text-secondary tracking-wider uppercase">
               {stats.totalGenerations > 0
-                ? `${stats.totalGenerations.toLocaleString()} visions manifested`
-                : "Now Manifesting Visions Daily"}
+                ? `${stats.totalGenerations.toLocaleString()} workflows automated`
+                : "The Best AI Tools Platform"}
             </span>
           </motion.div>
 
           {/* Headline */}
           <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }}
             className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter leading-[1.05] mb-6 max-w-5xl mx-auto">
-            From Idea to Art {" "}
-            <br className="hidden md:block" />
-            in <span className="text-gradient">Seconds</span>
+            Supercharge Growth <br className="hidden md:block" />
+            with <span className="text-gradient">Astryxo</span>
           </motion.h1>
 
           {/* Sub */}
           <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}
             className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-12">
-            Harness the power of generative intelligence to manifest cinematic visuals, text, and soundscapes from simple natural language prompts.
+            Access the world's most powerful enterprise-grade AI tools platform. Automate complex workflows, unify your data, and unlock elite AI productivity tools instantly.
           </motion.p>
 
           {/* Prompt Input */}
@@ -212,7 +213,7 @@ export default function LandingPage() {
               />
               <Button onClick={handleGenerate} variant="premium"
                 className="rounded-xl px-8 h-14 text-base font-black uppercase tracking-widest gap-2 shrink-0 active:scale-95 transition-all">
-                Generate <Wand2 className="w-4 h-4" />
+                Explore Tools <Wand2 className="w-4 h-4" />
               </Button>
             </div>
           </motion.div>
@@ -222,11 +223,11 @@ export default function LandingPage() {
             className="flex flex-wrap items-center justify-center gap-2 pt-2">
             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mr-1">Try:</span>
             {[
-              "Bioluminescent jellyfish city at midnight",
-              "Portrait of a neon samurai in rain",
-              "Cosmic dragon made of galaxies",
-              "Art nouveau poster of a forest spirit",
-              "Cyberpunk market at golden hour",
+              "Marketing copy automation",
+              "Customer support AI routing",
+              "Predictive data analytics modeling",
+              "Generative email sequences",
+              "AI code review assistance",
             ].map((p) => (
               <button
                 key={p}
@@ -242,7 +243,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── 4. MARKETING STATISTICS ──────────────────────── */}
-      <section className="py-24 px-6 mb-8">
+      <section className="py-24 px-6 mb-8" aria-label="Platform Statistics">
         <div className="max-w-7xl mx-auto">
 
           <div className="text-center mb-16">
@@ -272,8 +273,8 @@ export default function LandingPage() {
               },
               {
                 display: stats.totalGenerations > 0 ? stats.totalGenerations.toLocaleString() : "480,000+",
-                label: "Visions Generated",
-                sub: "+5,000 today alone",
+                label: "Tasks Automated",
+                sub: "across global SaaS nodes",
                 icon: Sparkles,
                 accent: "text-secondary",
                 bg: "from-secondary/10 to-secondary/5",
@@ -315,9 +316,9 @@ export default function LandingPage() {
           {/* Secondary highlights row */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
-              { stat: "< 3s", label: "Average generation time", icon: Zap, accent: "text-primary" },
-              { stat: "4.9 / 5", label: "Average creator satisfaction", icon: TrendingUp, accent: "text-secondary" },
-              { stat: "40+", label: "Countries with active users", icon: Globe, accent: "text-emerald-400" },
+              { stat: "< 3s", label: "Average API response time", icon: Zap, accent: "text-primary" },
+              { stat: "99%", label: "Task success pipeline rate", icon: TrendingUp, accent: "text-secondary" },
+              { stat: "1,200+", label: "B2B SaaS integrations", icon: Globe, accent: "text-emerald-400" },
             ].map(({ stat, label, icon: Icon, accent }, i) => (
               <motion.div key={label}
                 initial={{ opacity: 0, y: 16 }}
@@ -341,7 +342,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── 5. FEATURES ──────────────────────────────────── */}
-      <section className="py-32 border-y border-border/10 bg-card/10 mb-32">
+      <section className="py-32 border-y border-border/10 bg-card/10 mb-32" aria-label="Core Features">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-20">
             <motion.h2 initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
@@ -349,7 +350,7 @@ export default function LandingPage() {
               Unmatched Power
             </motion.h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-              Engineered for creators who demand speed and uncompromising quality without the friction of traditional tools.
+              Engineered for elite enterprises demanding uncompromising security, rapid integration, and the highest-performing AI productivity tools on the market.
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
@@ -374,7 +375,7 @@ export default function LandingPage() {
       <CommunityShowcase lovedOnly={true} hideHearts={true} />
 
       {/* ── 7. USE CASES ────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-6 mb-32">
+      <section className="max-w-7xl mx-auto px-6 mb-32" aria-label="Use Cases and Blog Posts">
         <div className="flex flex-col md:flex-row items-end justify-between mb-16 gap-6">
           <div className="max-w-2xl">
             <motion.h2 initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
@@ -382,7 +383,7 @@ export default function LandingPage() {
               Empowering Every Industry
             </motion.h2>
             <p className="text-muted-foreground text-lg">
-              From indie devs to global agencies, ASTRAL AI is the secret weapon behind the world&apos;s most innovative content.
+              From fast-scaling startups to global agencies, Astryxo is the robust SaaS AI platform driving backend innovation.
             </p>
           </div>
           <Link href="/blog"
@@ -397,10 +398,12 @@ export default function LandingPage() {
               viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.1 }}>
               <Link href={`/blog/${post.slug}`}
                 className="relative rounded-3xl overflow-hidden aspect-[4/5] group block">
-                <img
+                <Image
                   src={post.image || "https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?q=80&w=800&auto=format&fit=crop"}
-                  alt={post.title}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  alt={`Cover image for ${post.title}`}
+                  fill
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 33vw"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/30 to-transparent" />
                 <div className="absolute bottom-8 left-8 right-8">
@@ -432,16 +435,16 @@ export default function LandingPage() {
           <div className="relative z-10">
             <motion.h2 initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
               className="text-4xl md:text-6xl font-black tracking-tighter mb-8">
-              Ready to Manifest?
+              Transform Your Workflow Today
             </motion.h2>
             <p className="text-muted-foreground text-lg md:text-xl max-w-xl mx-auto mb-12">
-              Join {stats.totalUsers > 0 ? stats.totalUsers.toLocaleString() + "+" : "100,000+"} creators who are redefining the boundaries of human imagination.
+              Join {stats.totalUsers > 0 ? stats.totalUsers.toLocaleString() + "+" : "10,000+"} businesses scaling efficiently on the ultimate AI tools platform.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/register">
                 <Button variant="premium"
                   className="w-full sm:w-auto px-10 py-6 h-auto rounded-2xl text-lg font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all">
-                  Start Generating Now
+                  Activate Astryxo Console
                 </Button>
               </Link>
               <Link href="/blog">
@@ -454,6 +457,7 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+      </main>
 
     </div>
   )

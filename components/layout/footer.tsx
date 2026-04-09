@@ -10,9 +10,7 @@ export function Footer() {
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-16 relative z-10">
         <div className="space-y-8 md:pr-12">
           <Link href="/" className="flex items-center gap-2 group">
-            <span className="text-xl font-black tracking-tighter text-white uppercase tracking-widest leading-none">
-              ASTRAL <span className="text-primary italic transition-all group-hover:drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">AI</span>
-            </span>
+            <img src="/logo.svg" alt="Astryxo Logo" className="h-10 w-auto" />
           </Link>
           <p className="text-muted-foreground text-[11px] leading-relaxed max-w-sm font-black uppercase tracking-widest italic opacity-60">
             Next-Gneration visual intelligence mapping. Distributed generation at the edge of the network.
@@ -47,7 +45,7 @@ export function Footer() {
       </div>
 
       <div className="max-w-7xl mx-auto mt-24 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 text-[9px] text-white/30 uppercase tracking-[0.3em] font-black relative z-10">
-        <p>© 2026 Astral AI. All vectors secured.</p>
+        <p>© 2026 Astryxo AI. All rights reserved.</p>
         <div className="flex items-center gap-8">
           <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
           <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>

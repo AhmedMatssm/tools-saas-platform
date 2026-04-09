@@ -42,9 +42,10 @@ export default withAuth(
     const isPublicPath = [
        "/", "/login", "/register", "/signup", "/blog", "/pricing",
        "/contact", "/faq", "/tools", "/api/auth", "/api/account/register",
+       "/api/account/verify-email", "/api/account/send-verification", "/verify-email",
        "/api/faqs", "/api/blog", "/api/posts", "/api/contact",
        "/api/comments",
-       "/reset-password", "/about", "/privacy", "/terms", "/cookies", "/categories"
+       "/reset-password", "/about", "/privacy", "/terms", "/cookies", "/generate"
     ].some(p => p === "/" ? path === "/" : path.startsWith(p))
 
     const isStatic = path.includes(".") || path.startsWith("/_next")

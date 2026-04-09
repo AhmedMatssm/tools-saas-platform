@@ -9,13 +9,14 @@ import Link from "next/link"
 import {
   User, Shield, CreditCard,
   LogOut, Loader2, Check, X, Eye, EyeOff,
-  Lock, Zap, AlertTriangle, Settings, Copy, Monitor, Calendar, History, ArrowRight
+  Lock, Zap, AlertTriangle, Settings, Copy, Monitor, Calendar, History, ArrowRight,
+  Sparkles, Star, ShoppingCart
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import axios from "axios"
 
 /* ─── Types ─────────────────────────────────────────────── */
-type Tab = "account" | "password" | "billing" | "security"
+type Tab = "account" | "password" | "security"
 
 /* ─── Toast helper ───────────────────────────────────────── */
 function useToast() {
@@ -181,7 +182,6 @@ export default function SettingsPage() {
   const tabs: { id: Tab; label: string; icon: any }[] = [
     { id: "account", label: "Account", icon: User },
     { id: "password", label: "Password", icon: Lock },
-    { id: "billing", label: "Billing & Credits", icon: CreditCard },
     { id: "security", label: "Security & API", icon: Shield },
   ]
 
@@ -388,65 +388,6 @@ export default function SettingsPage() {
                       {isSavingPwd ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
                       Update Password
                     </Button>
-                  </div>
-                </Section>
-              </motion.div>
-            )}
-
-            {/* ─ BILLING ─ */}
-            {activeTab === "billing" && (
-              <motion.div key="billing" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} className="space-y-6">
-                <Section title="Billing & Credits Data" subtitle="Manage your platform subscription limit & plan">
-                  {/* Current Plan & Credits Banner */}
-                  <div className="p-6 rounded-2xl border border-primary/20 bg-primary/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <Zap className="w-4 h-4 text-primary" />
-                        <p className="text-[10px] font-black uppercase tracking-widest text-primary">Current Plan: <span className="text-white bg-primary/20 px-2 py-0.5 rounded ml-1">{userConfig?.plan}</span></p>
-                      </div>
-                      <h3 className="text-3xl font-black">{Math.max(0, userConfig?.credits || 0)} Credits Left</h3>
-                      <p className="text-xs text-muted-foreground">Credits reset on next billing cycle ({userConfig?.billingCycle ? new Date(userConfig.billingCycle).toLocaleDateString() : "Never"})</p>
-                    </div>
-                    {userConfig?.plan !== "PRO" && (
-                       <Button onClick={() => fire("Live Stripe Checkout is needed for this.")} variant="premium" className="rounded-xl px-8 h-11 text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/20">
-                         Upgrade to Pro
-                       </Button>
-                    )}
-                  </div>
-
-                  {/* Plan comparison */}
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {[
-                      { name: "Free", price: "$0/mo", features: ["10 generations/day", "Standard quality"], current: userConfig?.plan === "FREE" },
-                      { name: "Pro", price: "$19/mo", features: ["1,000 generations", "HD quality", "API access"], current: userConfig?.plan === "PRO" },
-                      { name: "Enterprise", price: "Custom", features: ["Custom models", "SLA guarantee", "Dedicated support"], current: userConfig?.plan === "ENTERPRISE" },
-                    ].map(plan => (
-                      <div key={plan.name} className={`p-6 rounded-2xl border flex flex-col justify-between space-y-4 ${plan.current ? "border-primary/30 bg-primary/5 shadow-[0_0_15px_rgba(59,130,246,0.1)]" : "border-white/5 bg-card/30"}`}>
-                        <div className="space-y-4">
-                           <div className="flex items-center justify-between">
-                             <h4 className="font-black text-sm uppercase tracking-widest">{plan.name}</h4>
-                             {plan.current && <span className="text-[9px] font-black uppercase tracking-widest text-primary bg-primary/10 px-2 py-1 rounded-full">Active</span>}
-                           </div>
-                           <p className="text-2xl font-black">{plan.price}</p>
-                           <ul className="space-y-2">
-                             {plan.features.map(f => (
-                               <li key={f} className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                                 <Check className="w-3 h-3 text-primary shrink-0" /> {f}
-                               </li>
-                             ))}
-                           </ul>
-                        </div>
-                        {!plan.current && (
-                          <Button onClick={() => fire(plan.name === "Enterprise" ? "Please email enterprise@astral.ai" : "Please integrate stripe to continue checkout!")} variant={plan.name === "Pro" ? "premium" : "outline"} className="w-full rounded-xl h-10 text-[10px] font-black uppercase tracking-widest">
-                            {plan.name === "Enterprise" ? "Contact Sales" : "Upgrade"}
-                          </Button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="p-5 rounded-2xl border border-white/5 bg-white/[0.02] text-center">
-                    <p className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Payment processing will be securely hosted by <strong className="text-white">Stripe</strong>. No payment info is stored here.</p>
                   </div>
                 </Section>
               </motion.div>

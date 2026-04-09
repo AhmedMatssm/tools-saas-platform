@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
+
+export const dynamic = "force-dynamic"
 import { getServerAuthSession } from "@/lib/auth"
 import { z } from "zod"
 
@@ -95,8 +97,8 @@ export async function POST(req: NextRequest) {
     if (error?.code === "P2002") {
       return NextResponse.json({ error: "A post with this slug already exists" }, { status: 409 })
     }
-    if (error?.name === "ZodError" || error instanceof z.ZodError) {
-      return NextResponse.json({ error: (error as any).errors[0].message }, { status: 400 })
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: error.issues[0].message }, { status: 400 })
     }
     console.error("ADMIN_BLOG_POST:", error)
     return NextResponse.json({ error: error.message || "Failed to create post" }, { status: 500 })
@@ -130,8 +132,8 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json({ success: true, post })
   } catch (error: any) {
-    if (error?.name === "ZodError" || error instanceof z.ZodError) {
-      return NextResponse.json({ error: (error as any).errors[0].message }, { status: 400 })
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: error.issues[0].message }, { status: 400 })
     }
     console.error("ADMIN_BLOG_PATCH:", error)
     return NextResponse.json({ error: error.message || "Failed to update post" }, { status: 500 })

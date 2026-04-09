@@ -3,6 +3,7 @@ import { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { Clock, Calendar, ChevronLeft, ChevronRight } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 import ShareButtons from "@/components/blog/share-buttons"
 import BlogInteractions from "@/components/blog/blog-interactions"
 import { filterXSS, getDefaultWhiteList } from "xss"
@@ -152,7 +153,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               {post.image && (
                 <div className="relative group overflow-hidden rounded-xl bg-[#23293c] p-1 mt-10">
                   <div className="absolute inset-0 bg-gradient-to-br from-[#8aebff]/20 to-[#d0bcff]/20 opacity-50"></div>
-                  <img src={post.image} alt={post.title} className="w-full h-[300px] md:h-[600px] object-cover rounded-lg" />
+                  <div className="relative w-full h-[300px] md:h-[600px]">
+                    <Image src={post.image} alt={post.title} fill priority sizes="(max-width: 768px) 100vw, 100vw" className="object-cover rounded-lg" />
+                  </div>
                   <div className="absolute bottom-6 left-6 flex gap-4">
                     <div className="bg-[#0c1324]/80 backdrop-blur-xl px-4 py-2 rounded-lg border border-white/10 text-[10px] font-mono text-[#8aebff]">
                       RECT_ID: {post.id.slice(-6).toUpperCase()}
@@ -200,12 +203,14 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                   {relatedPosts.map((rPost: any) => (
                     <Link key={rPost.id} href={`/blog/${rPost.slug}`} className="group glass-panel rounded-2xl overflow-hidden hover:border-[#8aebff]/30 transition-all border border-white/5 flex flex-col">
                       {/* Image */}
-                      <div className="aspect-video w-full overflow-hidden bg-[#151b2d] shrink-0">
+                      <div className="relative aspect-video w-full overflow-hidden bg-[#151b2d] shrink-0">
                         {rPost.image ? (
-                          <img
+                          <Image
                             src={rPost.image}
                             alt={rPost.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            fill
+                            sizes="(max-width: 768px) 100vw, 33vw"
+                            className="object-cover group-hover:scale-105 transition-transform duration-500"
                           />
                         ) : (
                           <div className="w-full h-full bg-gradient-to-br from-[#8aebff]/10 to-[#d0bcff]/10 flex items-center justify-center">

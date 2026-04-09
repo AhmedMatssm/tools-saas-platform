@@ -71,6 +71,10 @@ export const authOptions: NextAuthOptions = {
           throw new Error("MANIFESTATION_DENIED: Incorrect spectral key.")
         }
 
+        if (!user.emailVerified) {
+          throw new Error("UNVERIFIED_EMAIL: Unverified spectral address.")
+        }
+
         return user
       }
     }),

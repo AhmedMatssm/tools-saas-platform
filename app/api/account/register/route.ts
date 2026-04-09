@@ -3,6 +3,8 @@ import prisma from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 import { z } from "zod"
 import { logCreditChange } from "@/services/credits.service"
+import crypto from "crypto"
+import { sendEmail } from "@/services/mail.service"
 
 const registerSchema = z.object({
   name: z.string().min(2),
@@ -17,7 +19,7 @@ export async function POST(req: NextRequest) {
     const { name, email, password, referrerId } = registerSchema.parse(body)
 
     // Check if user exists
-    const existingUser = await (prisma as any).user.findUnique({
+    const existingUser = await prisma.user.findUnique({
       where: { email }
     })
 
@@ -27,9 +29,10 @@ export async function POST(req: NextRequest) {
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10)
+    const verificationToken = crypto.randomBytes(32).toString('hex')
 
     // Atomically create user and reward referrer
-    const result = await (prisma as any).$transaction(async (tx: any) => {
+    await prisma.$transaction(async (tx) => {
       // 1. Create new user with 10 credits (default in schema)
       const newUser = await tx.user.create({
         data: {
@@ -37,6 +40,15 @@ export async function POST(req: NextRequest) {
           email,
           password: hashedPassword,
           credits: 10, // Ensure they start with 10
+        }
+      })
+
+      // Create Verification Token
+      await tx.verificationToken.create({
+        data: {
+          identifier: email,
+          token: verificationToken,
+          expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
         }
       })
 
@@ -63,8 +75,29 @@ export async function POST(req: NextRequest) {
           // Don't fail the whole registration if referral fails
         }
       }
-
+      
       return newUser
+    })
+
+    // Send Verification Email
+    const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}&email=${encodeURIComponent(email)}`
+    
+    await sendEmail({
+      to: email,
+      subject: "Aura Network - Verify Your Identity",
+      html: `
+        <div style="font-family: sans-serif; padding: 20px; background-color: #0f172a; color: #f8fafc; border-radius: 12px; max-width: 600px; margin: 0 auto;">
+          <div style="text-align: center; margin-bottom: 24px;">
+            <div style="font-size: 24px; font-weight: bold; font-style: italic; color: #3b82f6;">Aura Network</div>
+          </div>
+          <h2 style="font-size: 20px; font-weight: 800; text-align: center; margin-bottom: 16px;">Manifest Your Spectral Identity</h2>
+          <p style="text-align: center; font-size: 14px; opacity: 0.9; margin-bottom: 32px;">Please confirm your connection to our network by verifying your email address.</p>
+          <div style="text-align: center;">
+            <a href="${verifyUrl}" style="background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; text-transform: uppercase; font-size: 12px; letter-spacing: 1px; display: inline-block;">Verify Connection</a>
+          </div>
+          <p style="font-size: 11px; opacity: 0.5; margin-top: 32px; text-align: center;">Or manually paste this uplink: <br/><a href="${verifyUrl}" style="color: #60a5fa;">${verifyUrl}</a></p>
+        </div>
+      `,
     })
 
     return NextResponse.json({

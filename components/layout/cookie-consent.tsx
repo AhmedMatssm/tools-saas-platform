@@ -54,7 +54,7 @@ export function CookieConsent() {
                   <p className="text-[11px] font-black uppercase tracking-[0.2em] text-primary">Spectral Data Notice</p>
                 </div>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  We use cookies and similar technologies to enhance your ASTRAL experience, analyze traffic, and personalize content. By clicking <strong className="text-white">Accept</strong>, you consent to our use of cookies.
+                  We use cookies and similar technologies to enhance your Astryxo experience, analyze traffic, and personalize content. By clicking <strong className="text-white">Accept</strong>, you consent to our use of cookies.
                 </p>
                 <p className="text-[11px] text-muted-foreground/60">
                   Read our{" "}

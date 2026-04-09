@@ -53,11 +53,6 @@ export function Navbar() {
   const userRole = (session?.user as any)?.role
   const navLinks = [
     { name: "Home", href: "/", icon: Home },
-    ...(session ? [{ 
-      name: userRole === "ADMIN" ? "Admin" : "Dashboard", 
-      href: userRole === "ADMIN" ? "/admin" : "/dashboard", 
-      icon: LayoutDashboard 
-    }] : []),
     { name: "About", href: "/about", icon: Info },
     { name: "Blogs", href: "/blog", icon: FileText },
     { name: "Tools", href: "/tools", icon: Wrench },
@@ -85,10 +80,8 @@ export function Navbar() {
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
 
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 shrink-0">
-          <span className="text-xl font-black tracking-tighter text-white uppercase leading-none">
-            ASTRAL <span className="text-primary italic">AI</span>
-          </span>
+        <Link href="/" className="flex items-center gap-2 shrink-0 relative z-10 transition-transform active:scale-95">
+          <img src="/logo.svg" alt="Astryxo Logo" className="h-8 w-auto" />
         </Link>
 
         {/* Desktop Navigation */}

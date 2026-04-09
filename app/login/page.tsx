@@ -44,7 +44,11 @@ export default function LoginPage() {
       })
 
       if (res?.error) {
-        setError("Invalid spectral credentials.")
+        if (res.error.includes("UNVERIFIED_EMAIL") || res.error.includes("unverified")) {
+          setError("Your identity is unverified. Please check your spectral mail.")
+        } else {
+          setError(res.error || "Invalid spectral credentials.")
+        }
       } else {
         const { getSession } = await import("next-auth/react")
         const session = await getSession()
@@ -84,8 +88,28 @@ export default function LoginPage() {
 
            <form onSubmit={handleCredentialsSignIn} className="space-y-4">
               {error && (
-                <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-xl text-destructive text-[10px] uppercase font-black tracking-widest text-center">
-                  {error}
+                <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-xl text-destructive text-[10px] uppercase font-black tracking-widest text-center flex flex-col items-center gap-3">
+                  <span>{error}</span>
+                  {error.includes("unverified") && (
+                    <button 
+                      type="button"
+                      disabled={isLoading}
+                      onClick={async () => {
+                        try {
+                           setIsLoading(true);
+                           await fetch("/api/account/send-verification", {
+                             method: "POST",
+                             headers: { "Content-Type": "application/json" },
+                             body: JSON.stringify({ email })
+                           });
+                           setError("Verification mail dispatched!");
+                        } catch(e) {} finally { setIsLoading(false); }
+                      }}
+                      className="underline text-primary hover:text-primary/80 transition-colors uppercase py-1"
+                    >
+                      Resend Verification Mail
+                    </button>
+                  )}
                 </div>
               )}
 
